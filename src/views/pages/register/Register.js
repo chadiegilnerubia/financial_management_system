@@ -9,12 +9,14 @@ import {
   CContainer,
   CForm,
   CFormInput,
+  CFormSelect,
   CInputGroup,
   CInputGroupText,
   CRow,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import { useUser } from 'src/context/UserContext'
 
 const Register = () => {
   const [username, setUsername] = useState('')
@@ -24,10 +26,11 @@ const Register = () => {
   const [repeatPassword, setRepeatPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-
+  const { login } = useUser()
   const handleRegister = async () => {
     try {
       console.log(email + '-' + username + '-' + password + '-' + user_type)
+
       // Validate that all fields are non-empty
       if (!username || !email || !password || !repeatPassword || !user_type) {
         setError('Invalid input. All fields are required.')
@@ -40,7 +43,7 @@ const Register = () => {
         return
       }
 
-      const response = await axios.post('http://localhost:3001/auth/register', {
+      const response = await axios.post('http://localhost:3005/auth/register', {
         username,
         email,
         password,
@@ -48,7 +51,20 @@ const Register = () => {
       })
 
       if (response.data.user) {
-        navigate('/dashboard')
+        login(response.data.user)
+
+        const userType = response.data.user.user_type
+
+        if (userType === 'manager') {
+          navigate('/dashboard')
+        } else if (userType === 'employee') {
+          navigate('/dashboard-employee')
+        } else {
+          // Handle other user types or navigate to a default route
+          console.warn('Unknown user type:', userType)
+          navigate('/dashboard') // Change this to your default route
+        }
+
         console.log('Registration successful!')
         // Optionally, you can redirect the user to the login page or any other page
       } else {
@@ -96,11 +112,15 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput
-                      placeholder="user_type"
+                    <CFormSelect
+                      custom
                       value={user_type}
                       onChange={(e) => setUser_type(e.target.value)}
-                    />
+                    >
+                      <option value="">Select user type</option>
+                      <option value="manager">Manager</option>
+                      <option value="employee">Employee</option>
+                    </CFormSelect>
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>

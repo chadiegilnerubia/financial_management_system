@@ -27,24 +27,29 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:3001/auth/login', {
+      const response = await axios.post('http://localhost:3005/auth/login', {
         email,
-        password, // Add this line
+        password,
       })
+
       console.log('Response data:', response.data)
+
       if (response.data.user) {
         login(response.data.user)
-        console.log(response.data.user)
-        console.log('Login successful!')
-        navigate('/dashboard')
+        const userType = response.data.user.user_type
+        if (userType === 'manager') {
+          navigate('/dashboard')
+        } else if (userType === 'employee') {
+          navigate('/dashboard-employee')
+        } else {
+          navigate('/dashboard') // Change this to your default route
+        }
       } else {
         console.error('Login failed.')
-        console.log(response.data)
         setError('Login failed. Please check your credentials.')
       }
     } catch (error) {
       console.error('An error occurred during login:', error.message)
-
       setError('An error occurred during login. Please try again later.')
     }
   }
