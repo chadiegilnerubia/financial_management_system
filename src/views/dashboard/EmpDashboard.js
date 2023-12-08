@@ -1,8 +1,9 @@
 //EmpDashboard.js
-import { useHistory } from 'react-router-dom'
 import React, { useState, useEffect } from 'react'
 import {
   CButton,
+  CForm,
+  CFormInput,
   CModal,
   CModalBody,
   CModalHeader,
@@ -18,6 +19,8 @@ import axios from 'axios'
 import { useUser } from '../../context/UserContext'
 import EditBudgetModal from './EditBudgetModal'
 import DeleteBudgetModal from './DeleteButtonModal'
+import { Pagination } from 'react-bootstrap'
+const PAGE_SIZE = 10
 
 const EmpDashboard = () => {
   const [empUsers, setEmpUsers] = useState([])
@@ -32,6 +35,8 @@ const EmpDashboard = () => {
     budget_proposal_name: '',
     budget_proposal_description: '',
   })
+  const [activePage, setActivePage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,8 +44,12 @@ const EmpDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
-        setEmpUsers(userResponse.data)
-        console.log(userResponse.data)
+        const userBudgetProposals = userResponse.data.filter(
+          (proposal) => proposal.user_id === user.id,
+        )
+
+        setEmpUsers(userBudgetProposals)
+        console.log(userBudgetProposals)
       } catch (error) {
         console.error('Error fetching data:', error)
       }
@@ -78,11 +87,14 @@ const EmpDashboard = () => {
       )
       if (response.ok) {
         console.log('Budget proposal submitted successfully')
-        // Refetch data after successful submission
+        // // Refetch data after successful submission
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
-        setEmpUsers(userResponse.data)
+        const userBudgetProposals = userResponse.data.filter(
+          (proposal) => proposal.user_id === user.id,
+        )
+        setEmpUsers(userBudgetProposals)
         // Clear input fields
         setFormData({
           budget_proposal_amount: 0,
@@ -107,6 +119,11 @@ const EmpDashboard = () => {
     }))
   }
 
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value)
+    setActivePage(1)
+  }
+
   const handleEditModalClose = (index) => {
     setEditModalVisible((prev) => {
       const newState = [...prev]
@@ -128,7 +145,6 @@ const EmpDashboard = () => {
       }
 
       const { userId, budgetId } = budgetToDelete
-
       // Perform the delete action by making a DELETE request
       const response = await axios.delete(
         `http://localhost:3005/proposals/user/${userId}/budget-proposal/${budgetId}`,
@@ -141,7 +157,10 @@ const EmpDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
-        setEmpUsers(userResponse.data)
+        const userBudgetProposals = userResponse.data.filter(
+          (proposal) => proposal.user_id === user.id,
+        )
+        setEmpUsers(userBudgetProposals)
 
         // Close the modal after successful deletion
         setDeleteBudget(false)
@@ -165,7 +184,15 @@ const EmpDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
-        setEmpUsers(userResponse.data)
+        const userBudgetProposals = userResponse.data.filter(
+          (proposal) => proposal.user_id === user.id,
+        )
+        setEmpUsers(userBudgetProposals)
+        setFormData({
+          budget_proposal_amount: 0,
+          budget_proposal_name: '',
+          budget_proposal_description: '',
+        })
         setEditModalVisible(false)
       } else {
         console.error('Failed to update budget')
@@ -188,7 +215,17 @@ const EmpDashboard = () => {
     setBudgetToDelete(budget)
     setDeleteBudget(true)
   }
+  const handlePageChange = (pageNumber) => {
+    setActivePage(pageNumber)
+  }
 
+  const startIndex = (activePage - 1) * PAGE_SIZE
+  const filteredEmpUsers = empUsers
+    .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice(startIndex, startIndex + PAGE_SIZE)
+  console.log('empUsers:', empUsers)
+  console.log('filteredEmpUsers:', filteredEmpUsers)
+  console.log('filteredEmpUsers length:', filteredEmpUsers.length)
   return (
     <>
       <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
@@ -243,6 +280,16 @@ const EmpDashboard = () => {
           </div>
         </CModalBody>
       </CModal>
+      <CForm className="mb-5">
+        <CFormInput
+          type="text"
+          id="searchBudgetProposal"
+          label="Search Budget Proposal"
+          placeholder="Enter budget name"
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+        />
+      </CForm>
 
       <CTable>
         <CTableHead>
@@ -256,7 +303,7 @@ const EmpDashboard = () => {
           </CTableRow>
         </CTableHead>
         <CTableBody>
-          {empUsers.map((user, index) => (
+          {filteredEmpUsers.map((user, index) => (
             <CTableRow key={index}>
               <CTableDataCell>
                 {user.budget_proposal_status === '' ? 'No status' : 'Pending'}
@@ -306,6 +353,19 @@ const EmpDashboard = () => {
           ))}
         </CTableBody>
       </CTable>
+      <div className="d-flex justify-content-center mt-3">
+        <Pagination>
+          {Array.from({ length: Math.ceil(empUsers.length / PAGE_SIZE) }).map((_, index) => (
+            <Pagination.Item
+              key={index + 1}
+              active={index + 1 === activePage}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </Pagination.Item>
+          ))}
+        </Pagination>
+      </div>
     </>
   )
 }
