@@ -27,7 +27,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:3005/auth/login', {
+      const response = await axios.post('http://localhost:3005/users/login', {
         email,
         password,
       })
@@ -36,7 +36,7 @@ const Login = () => {
 
       if (response.data.user) {
         login(response.data.user)
-        const userType = response.data.user.user_type
+        const userType = response.data.user.role
         if (userType === 'manager') {
           navigate('/dashboard')
         } else if (userType === 'employee') {
@@ -54,6 +54,11 @@ const Login = () => {
     }
   }
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleLogin()
+    }
+  }
   return (
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -62,7 +67,7 @@ const Login = () => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm>
+                  <CForm onKeyPress={handleKeyPress}>
                     <h1>Login</h1>
                     <p className="text-medium-emphasis">Sign In to your account</p>
                     <CInputGroup className="mb-3">
