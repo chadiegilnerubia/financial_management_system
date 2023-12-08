@@ -192,7 +192,7 @@ const EmpDashboard = () => {
   return (
     <>
       <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
-        Propose new Budgeta
+        Propose new Budget
       </CButton>
       <CModal
         visible={addBudget}
