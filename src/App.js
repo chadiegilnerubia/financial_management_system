@@ -1,6 +1,8 @@
 import React, { Component, Suspense } from 'react'
 import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './scss/style.scss'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const loading = (
   <div className="pt-3 text-center">
@@ -22,6 +24,7 @@ class App extends Component {
     return (
       <HashRouter>
         <Suspense fallback={loading}>
+          <ToastContainer />
           <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route exact path="/login" element={<Login />} />

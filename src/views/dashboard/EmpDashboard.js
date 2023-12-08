@@ -1,4 +1,5 @@
 //EmpDashboard.js
+import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
 import {
   CButton,
@@ -20,7 +21,9 @@ import { useUser } from '../../context/UserContext'
 import EditBudgetModal from './EditBudgetModal'
 import DeleteBudgetModal from './DeleteButtonModal'
 import { Pagination } from 'react-bootstrap'
-const PAGE_SIZE = 10
+import { CAlert } from '@coreui/react'
+import useAlert from './useAlert'
+const PAGE_SIZE = 6
 
 const EmpDashboard = () => {
   const [empUsers, setEmpUsers] = useState([])
@@ -30,6 +33,20 @@ const EmpDashboard = () => {
   const [deleteBudget, setDeleteBudget] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState(null)
   const [budgetToEdit, setBudgetToEdit] = useState(null)
+  const {
+    isVisible: updateAlertVisible,
+    showAlert: showUpdateAlert,
+    hideAlert: hideUpdateAlert,
+    AlertComponent: UpdateAlertComponent,
+  } = useAlert()
+  const {
+    isVisible: deleteAlertVisible,
+    showAlert: showDeleteAlert,
+    hideAlert: hideDeleteAlert,
+    AlertComponent: DeleteAlertComponent,
+  } = useAlert()
+  const { isVisible, showAlert, hideAlert, AlertComponent } = useAlert()
+
   const [formData, setFormData] = useState({
     budget_proposal_amount: 0,
     budget_proposal_name: '',
@@ -103,6 +120,7 @@ const EmpDashboard = () => {
         })
         // Close the modal
         setAddBudget(false)
+        showAlert('Budget proposal submitted successfully!')
       } else {
         console.error('Failed to submit budget proposal')
       }
@@ -161,9 +179,9 @@ const EmpDashboard = () => {
           (proposal) => proposal.user_id === user.id,
         )
         setEmpUsers(userBudgetProposals)
-
         // Close the modal after successful deletion
         setDeleteBudget(false)
+        showDeleteAlert('Budget proposal deleted successfully!')
       } else {
         console.error('Failed to delete budget')
       }
@@ -188,12 +206,14 @@ const EmpDashboard = () => {
           (proposal) => proposal.user_id === user.id,
         )
         setEmpUsers(userBudgetProposals)
+
         setFormData({
           budget_proposal_amount: 0,
           budget_proposal_name: '',
           budget_proposal_description: '',
         })
         setEditModalVisible(false)
+        showUpdateAlert('Budget proposal updated successfully!')
       } else {
         console.error('Failed to update budget')
       }
@@ -223,26 +243,34 @@ const EmpDashboard = () => {
   const filteredEmpUsers = empUsers
     .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice(startIndex, startIndex + PAGE_SIZE)
-  console.log('empUsers:', empUsers)
-  console.log('filteredEmpUsers:', filteredEmpUsers)
-  console.log('filteredEmpUsers length:', filteredEmpUsers.length)
+
   return (
     <>
+      {isVisible && <AlertComponent message="Budget proposal submitted successfully!" />}
+      {updateAlertVisible && (
+        <UpdateAlertComponent message="Budget proposal updated successfully!" />
+      )}
+      {deleteAlertVisible && (
+        <DeleteAlertComponent message="Budget proposal deleted successfully!" />
+      )}
+
       <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
         Propose new Budget
       </CButton>
       <CModal
         visible={addBudget}
         onClose={() => setAddBudget(false)}
-        aria-labelledby="LiveDemoExampleLabel"
+        aria-labelledby="addBudgetLabel"
       >
         <CModalHeader onClose={() => setAddBudget(false)}>
-          <CModalTitle id="LiveDemoExampleLabel">Add New Budget</CModalTitle>
+          <CModalTitle id="addBudgetLabel" className="text-center m-2">
+            Propose a budget
+          </CModalTitle>
         </CModalHeader>
         <CModalBody>
           <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
             <form onSubmit={handleSubmit}>
-              <h3 className="text-center m-2">Propose a budget</h3>
+              {/* <h3 className="text-center m-2">Propose a budget</h3> */}
               <div className="mb-3">
                 <label className="form-label">Budget Name</label>
                 <input
