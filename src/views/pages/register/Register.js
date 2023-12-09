@@ -20,7 +20,7 @@ import { useUser } from 'src/context/UserContext'
 
 const Register = () => {
   const [username, setUsername] = useState('')
-  const [user_type, setUser_type] = useState('')
+  const [role, setRole] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
@@ -29,10 +29,10 @@ const Register = () => {
   const { login } = useUser()
   const handleRegister = async () => {
     try {
-      console.log(email + '-' + username + '-' + password + '-' + user_type)
+      console.log(email + '-' + username + '-' + password + '-' + role)
 
       // Validate that all fields are non-empty
-      if (!username || !email || !password || !repeatPassword || !user_type) {
+      if (!username || !email || !password || !repeatPassword || !role) {
         setError('Invalid input. All fields are required.')
         return
       }
@@ -47,13 +47,13 @@ const Register = () => {
         username,
         email,
         password,
-        user_type,
+        role,
       })
 
       if (response.data.user) {
         login(response.data.user)
 
-        const userType = response.data.user.user_type
+        const userType = response.data.user.role
 
         if (userType === 'manager') {
           navigate('/dashboard')
@@ -112,11 +112,7 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormSelect
-                      custom
-                      value={user_type}
-                      onChange={(e) => setUser_type(e.target.value)}
-                    >
+                    <CFormSelect custom value={role} onChange={(e) => setRole(e.target.value)}>
                       <option value="">Select user type</option>
                       <option value="manager">Manager</option>
                       <option value="employee">Employee</option>
