@@ -256,7 +256,6 @@ const EmpDashboard = () => {
       } else if (selectedStatus === 'false') {
         return user.budget_proposal_status === false
       }
-      // Handle other cases if needed
     })
     .slice(startIndex, startIndex + PAGE_SIZE)
 
