@@ -1,6 +1,7 @@
 //EmpDashboard.js
 import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
+import { FaPen, FaTrash } from 'react-icons/fa'
 import {
   CButton,
   CDropdown,
@@ -382,7 +383,7 @@ const EmpDashboard = () => {
                     style={{ marginRight: '20px' }}
                     onClick={() => handleEditClick(user, index)}
                   >
-                    Edit
+                    <FaPen />
                   </CButton>
                   {editModalVisible[index] && (
                     <EditBudgetModal
@@ -402,7 +403,7 @@ const EmpDashboard = () => {
                         handleDeleteClick({ userId: user.user_id, budgetId: user.id })
                       }}
                     >
-                      Delete
+                      <FaTrash />
                     </CButton>
                     <DeleteBudgetModal
                       visible={deleteBudget}

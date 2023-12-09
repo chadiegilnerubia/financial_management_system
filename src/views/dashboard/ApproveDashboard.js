@@ -2,6 +2,7 @@
 import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { FaPen, FaTrash } from 'react-icons/fa'
 import {
   CButton,
   CForm,
@@ -26,7 +27,6 @@ import { useUser } from '../../context/UserContext'
 import EditBudgetModal from './EditBudgetModal'
 import DeleteBudgetModal from './DeleteButtonModal'
 import { Pagination } from 'react-bootstrap'
-import { CAlert } from '@coreui/react'
 import useAlert from './useAlert'
 const PAGE_SIZE = 6
 
@@ -415,7 +415,7 @@ const ApproveDashboard = () => {
                     style={{ marginRight: '20px' }}
                     onClick={() => handleEditClick(user, index)}
                   >
-                    Edit
+                    <FaPen />
                   </CButton>
                   {editModalVisible[index] && (
                     <EditBudgetModal
@@ -435,7 +435,7 @@ const ApproveDashboard = () => {
                         handleDeleteClick({ userId: user.user_id, budgetId: user.id })
                       }}
                     >
-                      Delete
+                      <FaTrash />
                     </CButton>
                     <DeleteBudgetModal
                       visible={deleteBudget}
