@@ -1,6 +1,7 @@
-//EmpDashboard.js
+//ApproveDashboard.js
 import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import {
   CButton,
   CForm,
@@ -15,6 +16,10 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
 } from '@coreui/react'
 import axios from 'axios'
 import { useUser } from '../../context/UserContext'
@@ -25,7 +30,7 @@ import { CAlert } from '@coreui/react'
 import useAlert from './useAlert'
 const PAGE_SIZE = 6
 
-const EmpDashboard = () => {
+const ApproveDashboard = () => {
   const [empUsers, setEmpUsers] = useState([])
   const { user } = useUser()
   const [addBudget, setAddBudget] = useState(false)
@@ -33,6 +38,9 @@ const EmpDashboard = () => {
   const [deleteBudget, setDeleteBudget] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState(null)
   const [budgetToEdit, setBudgetToEdit] = useState(null)
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [refreshProposals, setRefreshProposals] = useState(false)
+  const { id: paramId } = useParams()
   const {
     isVisible: updateAlertVisible,
     showAlert: showUpdateAlert,
@@ -61,19 +69,18 @@ const EmpDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
-        const userBudgetProposals = userResponse.data.filter(
-          (proposal) => proposal.user_id === user.id,
-        )
-
+        const userBudgetProposals = userResponse.data.filter((proposal) => {
+          const userId = parseInt(paramId, 10)
+          return proposal.user_id === userId
+        })
         setEmpUsers(userBudgetProposals)
-        console.log(userBudgetProposals)
       } catch (error) {
         console.error('Error fetching data:', error)
       }
     }
 
     fetchData()
-  }, [user])
+  }, [paramId, user, refreshProposals])
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp)
@@ -181,6 +188,7 @@ const EmpDashboard = () => {
         setEmpUsers(userBudgetProposals)
         // Close the modal after successful deletion
         setDeleteBudget(false)
+        setRefreshProposals((prev) => !prev)
         showDeleteAlert('Budget proposal deleted successfully!')
       } else {
         console.error('Failed to delete budget')
@@ -213,6 +221,7 @@ const EmpDashboard = () => {
           budget_proposal_description: '',
         })
         setEditModalVisible(false)
+        setRefreshProposals((prev) => !prev)
         showUpdateAlert('Budget proposal updated successfully!')
       } else {
         console.error('Failed to update budget')
@@ -239,11 +248,44 @@ const EmpDashboard = () => {
     setActivePage(pageNumber)
   }
 
+  const handleApproveClick = async (budgetId) => {
+    try {
+      // Make a request to your backend to approve the budget
+      const userId = parseInt(paramId, 10)
+      const response = await axios.put(
+        `http://localhost:3005/proposals/user/${userId}/budget-proposal/approve/${budgetId}`,
+      )
+      console.log('Approve btn click!')
+      console.log('budgeId', budgetId)
+      if (response.status === 200) {
+        // Budget approved successfully, update the UI or perform any necessary actions
+        setRefreshProposals((prev) => !prev)
+        console.log('Budget approved successfully')
+      } else {
+        console.error('Failed to approve budget')
+      }
+    } catch (error) {
+      console.error('Error approving budget:', error)
+    }
+  }
+
   const startIndex = (activePage - 1) * PAGE_SIZE
   const filteredEmpUsers = empUsers
     .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((user) => {
+      if (selectedStatus === '') {
+        return true
+      } else if (selectedStatus === 'true') {
+        return user.budget_proposal_status === true
+      } else if (selectedStatus === 'false') {
+        return user.budget_proposal_status === false
+      }
+      // Handle other cases if needed
+    })
     .slice(startIndex, startIndex + PAGE_SIZE)
 
+  console.log(filteredEmpUsers)
+  console.log(empUsers)
   return (
     <>
       {isVisible && <AlertComponent message="Budget proposal submitted successfully!" />}
@@ -254,7 +296,8 @@ const EmpDashboard = () => {
         <DeleteAlertComponent message="Budget proposal deleted successfully!" />
       )}
       <div className="d-flex justify-content-between align-item-center">
-        <h4>Employee's Dashboard: {user.username}</h4>
+        <h4>Manager's Dashboard: {user.username}</h4>
+
         <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
           Propose new Budget
         </CButton>
@@ -310,6 +353,14 @@ const EmpDashboard = () => {
           </CModalBody>
         </CModal>
       </div>
+      <CDropdown>
+        <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
+        <CDropdownMenu>
+          <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
+          <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
+          <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
+        </CDropdownMenu>
+      </CDropdown>
       <CForm className="mb-5">
         <CFormInput
           type="text"
@@ -336,7 +387,7 @@ const EmpDashboard = () => {
           {filteredEmpUsers.map((user, index) => (
             <CTableRow key={index}>
               <CTableDataCell>
-                {user.budget_proposal_status === '' ? 'No status' : 'Pending'}
+                {user.budget_proposal_status === null ? 'No status' : 'Pending'}
               </CTableDataCell>
               <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
               <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>
@@ -344,6 +395,21 @@ const EmpDashboard = () => {
               <CTableDataCell>{formatTimestamp(user.createdAt)}</CTableDataCell>
               <CTableDataCell>
                 <div className="d-flex">
+                  <>
+                    <CButton
+                      className="mb-3 text-white"
+                      color={user.budget_proposal_status ? 'success' : 'warning'}
+                      style={{ marginRight: '20px' }}
+                      onClick={() => handleApproveClick(user.id)}
+                    >
+                      {user.budget_proposal_status ? 'Approved' : 'Pending'}
+                    </CButton>
+                    <DeleteBudgetModal
+                      visible={deleteBudget}
+                      onClose={() => setDeleteBudget(false)}
+                      handleDelete={handleDelete}
+                    />
+                  </>
                   <CButton
                     className="mb-3"
                     style={{ marginRight: '20px' }}
@@ -400,4 +466,4 @@ const EmpDashboard = () => {
   )
 }
 
-export default EmpDashboard
+export default ApproveDashboard

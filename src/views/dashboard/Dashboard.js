@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Pagination } from 'react-bootstrap'
 import {
   CButton,
@@ -6,6 +7,8 @@ import {
   CCardBody,
   CCardHeader,
   CCol,
+  CForm,
+  CFormInput,
   CModal,
   CModalBody,
   CModalFooter,
@@ -22,7 +25,9 @@ import {
 import axios from 'axios'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import { useUser } from '../../context/UserContext'
-const PAGE_SIZE = 10
+
+const PAGE_SIZE = 3
+
 const Dashboard = () => {
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [combinedData, setCombinedData] = useState([])
@@ -30,8 +35,9 @@ const Dashboard = () => {
   const [visibleMap, setVisibleMap] = useState({})
   const [approve, setApprove] = useState(false)
   const [addBudget, setAddBudget] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { user } = useUser()
-
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     amount: 0,
     budget_name: '', // Added the budget_name field
@@ -41,10 +47,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch user data
         const userResponse = await axios.get('http://localhost:3005/users')
         const initialVisibleMap = userResponse.data.reduce((acc, user) => {
-          acc[user.id] = false // Initialize visibility status for each user
+          acc[user.id] = false
           return acc
         }, {})
         setCombinedData(userResponse.data)
@@ -57,34 +62,37 @@ const Dashboard = () => {
     fetchData()
   }, [user])
 
-  console.log(combinedData)
-
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber)
-    setVisibleMap({}) // Reset visibility status when changing the page
+    setVisibleMap({})
     setApprove(false)
   }
 
   const startIndex = (activePage - 1) * PAGE_SIZE
   const usersToShow = combinedData.slice(startIndex, startIndex + PAGE_SIZE)
 
-  // Filter usersToShow based on the role of the logged-in user
-  const filteredUsersToShow = usersToShow.filter((user) => {
-    if (loggedInUser && loggedInUser.role === 'manager') {
-      // Manager can view all data
-      return true
-    } else if (loggedInUser && loggedInUser.role === 'employee') {
-      // Employee can only view their own data
-      return user.id === loggedInUser.id
-    }
-    return false
-  })
+  // const filteredEmpUsers = combinedData.filter(
+  //   (user) =>
+  //     user.budget_proposal_name &&
+  //     typeof user.budget_proposal_name === 'string' &&
+  //     user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()),
+  // )
+  const filteredEmpUsers = combinedData
+    .filter((user) => user.username.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice(startIndex, startIndex + PAGE_SIZE)
+
+  console.log(searchQuery)
 
   const toggleVisible = (userId) => {
     setVisibleMap((prevVisibleMap) => ({
       ...prevVisibleMap,
       [userId]: !prevVisibleMap[userId],
     }))
+  }
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value)
+    setActivePage(1)
   }
 
   const handleInputChange = (e) => {
@@ -121,6 +129,17 @@ const Dashboard = () => {
     <>
       <WidgetsBrand withCharts />
       <>
+        <CForm className="mb-5">
+          <CFormInput
+            type="text"
+            id="searchBudgetProposal"
+            label="Search User"
+            placeholder="Enter User name"
+            value={searchQuery}
+            onChange={handleSearchInputChange}
+          />
+        </CForm>
+
         {loggedInUser && loggedInUser.role === 'employee' && (
           <>
             <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
@@ -197,7 +216,7 @@ const Dashboard = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {filteredUsersToShow.map((user, index) => (
+                  {filteredEmpUsers.map((user, index) => (
                     <CTableRow key={index}>
                       <CTableDataCell>
                         <div>{user.budget_proposal_status === true ? 'Approved' : 'Pending'}</div>
@@ -231,38 +250,18 @@ const Dashboard = () => {
                               </CModalHeader>
                               <CModalBody>
                                 <>
-                                  <form>
-                                    <div className="mb-3">
-                                      <label htmlFor="exampleInputEmail1" className="form-label">
-                                        ID: {user.id}
-                                      </label>
-                                      <br />
-                                      <label htmlFor="exampleInputEmail1" className="form-label">
-                                        Name: {user.username}
-                                      </label>
-                                      <p>
-                                        Amount:{' '}
-                                        {user.budget_proposal_amount ?? 'No amount available'}
-                                        <br />
-                                        Description:{' '}
-                                        {user.budget_proposal_description ??
-                                          'No description available'}
-                                        <br />
-                                        Status:{' '}
-                                        {user.budget_proposal_status === 1
-                                          ? 'Pending'
-                                          : 'Not Pending'}
-                                      </p>
-                                    </div>
-                                  </form>
+                                  <p>{`You want to navigate to ${user.username} budget table?`}</p>
                                 </>
                               </CModalBody>
                               <CModalFooter className="d-flex align-items-center justify-content-between">
-                                <CButton color="danger" className="text-white">
-                                  Reject
-                                </CButton>
-                                <CButton color="primary" className="text-white">
-                                  Approve
+                                <div></div>
+                                <CButton
+                                  color="primary"
+                                  className="text-white"
+                                  size="sm"
+                                  onClick={() => navigate(`/dashboard-employee/${user.id}`)}
+                                >
+                                  Yes
                                 </CButton>
                               </CModalFooter>
                             </CModal>
@@ -273,7 +272,6 @@ const Dashboard = () => {
                               'No status'
                             ) : (
                               <>
-                                {console.log(user)}
                                 <CButton
                                   className="bg-warning border-0"
                                   onClick={() => toggleVisible(user.id)}
@@ -290,52 +288,19 @@ const Dashboard = () => {
                                   </CModalHeader>
                                   <CModalBody>
                                     <>
-                                      <form>
-                                        <div className="mb-3">
-                                          <label
-                                            htmlFor="exampleInputEmail1"
-                                            className="form-label"
-                                          >
-                                            ID: {user.id}
-                                          </label>
-                                          <br />
-                                          <label
-                                            htmlFor="exampleInputEmail1"
-                                            className="form-label"
-                                          >
-                                            Name: {user.username}
-                                          </label>
-                                          <p>
-                                            Amount:{' '}
-                                            {user.budget_proposal_amount === ''
-                                              ? 'No value'
-                                              : user.budget_proposal_amount}
-                                            <br />
-                                            Description:{' '}
-                                            {user.budget_proposal_description === ''
-                                              ? 'No Description'
-                                              : user.budget_proposal_description}
-                                            <br />
-                                            Proposal name:{' '}
-                                            {user.budget_proposal_name === ''
-                                              ? 'No proposal name'
-                                              : user.budget_proposal_name}
-                                            <br />
-                                            Proposal status:{' '}
-                                            {user.budget_proposal_status !== false
-                                              ? 'No Status'
-                                              : 'Pending'}
-                                          </p>
-                                        </div>
-                                      </form>
+                                      <p>
+                                        {`You want to navigate to ${user.username} budget table?`}
+                                      </p>
                                     </>
                                   </CModalBody>
                                   <CModalFooter className="d-flex align-items-center justify-content-between">
-                                    <CButton color="danger" className="text-white">
-                                      Reject
-                                    </CButton>
-                                    <CButton color="primary" className="text-white">
-                                      Approve
+                                    <div></div>
+                                    <CButton
+                                      color="primary"
+                                      className="text-white"
+                                      onClick={() => navigate(`/dashboard-employee/${user.id}`)}
+                                    >
+                                      Yes
                                     </CButton>
                                   </CModalFooter>
                                 </CModal>
@@ -348,6 +313,7 @@ const Dashboard = () => {
                   ))}
                 </CTableBody>
               </CTable>
+
               <div className="d-flex justify-content-center mt-3">
                 <Pagination>
                   {Array.from({ length: Math.ceil(combinedData.length / PAGE_SIZE) }).map(
