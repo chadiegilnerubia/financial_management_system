@@ -3,6 +3,10 @@ import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
 import {
   CButton,
+  CDropdown,
+  CDropdownItem,
+  CDropdownMenu,
+  CDropdownToggle,
   CForm,
   CFormInput,
   CModal,
@@ -33,6 +37,8 @@ const EmpDashboard = () => {
   const [deleteBudget, setDeleteBudget] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState(null)
   const [budgetToEdit, setBudgetToEdit] = useState(null)
+  const [selectedStatus, setSelectedStatus] = useState('')
+
   const {
     isVisible: updateAlertVisible,
     showAlert: showUpdateAlert,
@@ -242,6 +248,16 @@ const EmpDashboard = () => {
   const startIndex = (activePage - 1) * PAGE_SIZE
   const filteredEmpUsers = empUsers
     .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((user) => {
+      if (selectedStatus === '') {
+        return true
+      } else if (selectedStatus === 'true') {
+        return user.budget_proposal_status === true
+      } else if (selectedStatus === 'false') {
+        return user.budget_proposal_status === false
+      }
+      // Handle other cases if needed
+    })
     .slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
@@ -310,7 +326,7 @@ const EmpDashboard = () => {
           </CModalBody>
         </CModal>
       </div>
-      <CForm className="mb-5">
+      <CForm className="mb-4">
         <CFormInput
           type="text"
           id="searchBudgetProposal"
@@ -320,6 +336,14 @@ const EmpDashboard = () => {
           onChange={handleSearchInputChange}
         />
       </CForm>
+      <CDropdown className="mb-4">
+        <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
+        <CDropdownMenu>
+          <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
+          <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
+          <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
+        </CDropdownMenu>
+      </CDropdown>
 
       <CTable>
         <CTableHead>
@@ -336,7 +360,17 @@ const EmpDashboard = () => {
           {filteredEmpUsers.map((user, index) => (
             <CTableRow key={index}>
               <CTableDataCell>
-                {user.budget_proposal_status === '' ? 'No status' : 'Pending'}
+                {user.budget_proposal_status === true ? (
+                  <>
+                    <CButton className="mb-3 text-white" color="success">
+                      Approved
+                    </CButton>
+                  </>
+                ) : (
+                  <CButton className="mb-3 text-white" color="warning" style={{ width: '97px' }}>
+                    Pending
+                  </CButton>
+                )}
               </CTableDataCell>
               <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
               <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>

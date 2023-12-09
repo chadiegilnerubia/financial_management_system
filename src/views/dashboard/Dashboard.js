@@ -274,6 +274,7 @@ const Dashboard = () => {
                               <>
                                 <CButton
                                   className="bg-warning border-0"
+                                  style={{ width: '97px' }}
                                   onClick={() => toggleVisible(user.id)}
                                 >
                                   <span>Pending</span>

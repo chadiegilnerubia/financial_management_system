@@ -387,7 +387,7 @@ const ApproveDashboard = () => {
           {filteredEmpUsers.map((user, index) => (
             <CTableRow key={index}>
               <CTableDataCell>
-                {user.budget_proposal_status === null ? 'No status' : 'Pending'}
+                {user.budget_proposal_status === true ? 'Approved' : 'Pending'}
               </CTableDataCell>
               <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
               <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>
@@ -399,7 +399,7 @@ const ApproveDashboard = () => {
                     <CButton
                       className="mb-3 text-white"
                       color={user.budget_proposal_status ? 'success' : 'warning'}
-                      style={{ marginRight: '20px' }}
+                      style={{ marginRight: '20px', width: '97px' }}
                       onClick={() => handleApproveClick(user.id)}
                     >
                       {user.budget_proposal_status ? 'Approved' : 'Pending'}
