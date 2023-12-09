@@ -61,7 +61,7 @@ const Dashboard = () => {
     }
     fetchData()
   }, [user])
-
+  console.log(user)
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber)
     setVisibleMap({})

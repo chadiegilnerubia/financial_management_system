@@ -42,8 +42,7 @@ const AppHeaderDropdown = () => {
           {user != null ? user.username : 'No user'}
         </CDropdownHeader>
         <CDropdownItem href="#">
-          <CIcon icon={cilUser} className="me-2" />
-          Role: {user.role}
+          {user !== null && <CDropdownItem href="#">Role: {user.role}</CDropdownItem>}
         </CDropdownItem>
         <CDropdownItem href="#">
           <CIcon icon={cilUser} className="me-2" />
