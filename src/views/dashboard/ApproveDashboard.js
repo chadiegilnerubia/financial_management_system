@@ -296,7 +296,7 @@ const ApproveDashboard = () => {
         <DeleteAlertComponent message="Budget proposal deleted successfully!" />
       )}
       <div className="d-flex justify-content-between align-item-center">
-        <h4>Manager's Dashboard: {user.username}</h4>
+        {user !== null ? <h4>Manager's Dashboard: {user.username}</h4> : null}
 
         <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
           Propose new Budget
