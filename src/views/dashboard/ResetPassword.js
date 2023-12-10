@@ -17,6 +17,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import useFormValidation from './useFormValidation'
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('')
@@ -25,7 +26,9 @@ const ResetPassword = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useUser()
+  const [errorReset, setErrorReset] = useState(false)
 
+  const { isVisible, showAlert, hideAlert, AlertComponent } = useFormValidation()
   const handleResetPassword = async () => {
     try {
       const response = await axios.post('http://localhost:3005/users/reset-password', {
@@ -38,13 +41,25 @@ const ResetPassword = () => {
 
       if (response.status) {
         login(response.data.user)
+        setErrorReset(false)
+        console.log(errorReset)
         navigate('/login')
       } else {
         console.error('Reset password failed.')
+        setErrorReset(true)
+        console.log(errorReset)
+        showAlert('Budget proposal submitted successfully!')
+        setTimeout(() => {
+          setErrorReset(false)
+        }, 3000)
         setError('Reset password failed. Please check your credentials.')
       }
     } catch (error) {
       console.error('An error occurred during password reset:', error.message)
+      setErrorReset(true)
+      setTimeout(() => {
+        setErrorReset(false)
+      }, 3000)
       setError('An error occurred during password reset. Please try again later.')
     }
   }
@@ -55,11 +70,13 @@ const ResetPassword = () => {
     }
   }
 
+  console.log(errorReset)
   return (
     <div className="bg-light min-vh-70 d-flex flex-row align-items-center justify-content-center">
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={5}>
+            {errorReset && <AlertComponent message="Make sure the inputs are correct." />}
             <CCardGroup>
               <CCard className="p-4 mx-auto">
                 <CCardBody>
