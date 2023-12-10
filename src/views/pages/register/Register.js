@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import {
   CButton,
@@ -17,6 +16,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 import { useUser } from 'src/context/UserContext'
+import { useNavigate } from 'react-router-dom'
 
 const Register = () => {
   const [username, setUsername] = useState('')
@@ -27,6 +27,10 @@ const Register = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useUser()
+
+  // Email validation regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
   const handleRegister = async () => {
     try {
       console.log(email + '-' + username + '-' + password + '-' + role)
@@ -34,6 +38,12 @@ const Register = () => {
       // Validate that all fields are non-empty
       if (!username || !email || !password || !repeatPassword || !role) {
         setError('Invalid input. All fields are required.')
+        return
+      }
+
+      // Validate that the email has a valid format
+      if (!emailRegex.test(email)) {
+        setError('Invalid email format')
         return
       }
 
