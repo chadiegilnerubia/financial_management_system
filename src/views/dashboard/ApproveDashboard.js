@@ -7,10 +7,6 @@ import {
   CButton,
   CForm,
   CFormInput,
-  CModal,
-  CModalBody,
-  CModalHeader,
-  CModalTitle,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -43,6 +39,7 @@ const ApproveDashboard = () => {
   const [budgetProposal, setBudgetProposals] = useState([])
   const [pendingProposalsCount, setPendingProposalsCount] = useState([])
   const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
+  const [userAproveDashboard, setUserAproveDashboard] = useState('')
   const { id: paramId } = useParams()
   const {
     isVisible: updateAlertVisible,
@@ -75,11 +72,13 @@ const ApproveDashboard = () => {
         const budgetProposalResponse = await axios.get(
           'http://localhost:3005/proposals/budget-proposals',
         )
+        const userId = parseInt(paramId, 10)
+        const userAproveDashboard = await axios.get(`http://localhost:3005/users/${userId}`)
         const userBudgetProposals = userResponse.data.filter((proposal) => {
-          const userId = parseInt(paramId, 10)
           return proposal.user_id === userId
         })
-        const userId = user.id
+        setUserAproveDashboard(userAproveDashboard.data.username)
+        // const userId = user.id
         const allBudgetProposals = budgetProposalResponse.data
         const pendingProposals = allBudgetProposals.filter(
           (proposal) => proposal.user_id === userId && !proposal.budget_proposal_status,
@@ -88,7 +87,7 @@ const ApproveDashboard = () => {
           (proposal) => proposal.user_id === userId && proposal.budget_proposal_status,
         )
         const userBudgetProposalsCount = userResponse.data.filter(
-          (proposal) => proposal.user_id === user.id,
+          (proposal) => proposal.user_id === userId,
         )
         setPendingProposalsCount(pendingProposals.length)
         setApprovedProposalsCount(approvedProposals.length)
@@ -288,7 +287,12 @@ const ApproveDashboard = () => {
       console.error('Error approving budget:', error)
     }
   }
-
+  function capitalizeFirstLetter(inputString) {
+    if (typeof inputString !== 'string' || inputString.length === 0) {
+      return inputString
+    }
+    return inputString.charAt(0).toUpperCase() + inputString.slice(1)
+  }
   const startIndex = (activePage - 1) * PAGE_SIZE
   const filteredEmpUsers = empUsers
     .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -303,9 +307,6 @@ const ApproveDashboard = () => {
       // Handle other cases if needed
     })
     .slice(startIndex, startIndex + PAGE_SIZE)
-
-  console.log(filteredEmpUsers)
-  console.log(empUsers)
   return (
     <>
       {isVisible && <AlertComponent message="Budget proposal submitted successfully!" />}
@@ -316,7 +317,9 @@ const ApproveDashboard = () => {
         <DeleteAlertComponent message="Budget proposal deleted successfully!" />
       )}
       <div className="d-flex justify-content-between align-item-center">
-        {user !== null ? <h4>Manager's Dashboard: {user.username}</h4> : null}
+        {user !== null ? (
+          <h4>User's employee Dashboard: {capitalizeFirstLetter(userAproveDashboard)}</h4>
+        ) : null}
       </div>
       <div className="d-flex align-items-center justify-content-between">
         <CDropdown className="mb-4">
