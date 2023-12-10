@@ -39,7 +39,9 @@ const EmpDashboard = () => {
   const [budgetToDelete, setBudgetToDelete] = useState(null)
   const [budgetToEdit, setBudgetToEdit] = useState(null)
   const [selectedStatus, setSelectedStatus] = useState('')
-
+  const [budgetProposal, setBudgetProposals] = useState([])
+  const [pendingProposalsCount, setPendingProposalsCount] = useState([])
+  const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
   const {
     isVisible: updateAlertVisible,
     showAlert: showUpdateAlert,
@@ -68,11 +70,24 @@ const EmpDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
+        const budgetProposalResponse = await axios.get(
+          'http://localhost:3005/proposals/budget-proposals',
+        )
+        const allBudgetProposals = budgetProposalResponse.data
+        const pendingProposals = allBudgetProposals.filter(
+          (proposal) => !proposal.budget_proposal_status,
+        )
+        const approvedProposals = allBudgetProposals.filter(
+          (proposal) => proposal.budget_proposal_status,
+        )
         const userBudgetProposals = userResponse.data.filter(
           (proposal) => proposal.user_id === user.id,
         )
 
         setEmpUsers(userBudgetProposals)
+        setBudgetProposals(allBudgetProposals)
+        setPendingProposalsCount(pendingProposals.length)
+        setApprovedProposalsCount(approvedProposals.length)
         console.log(userBudgetProposals)
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -81,7 +96,9 @@ const EmpDashboard = () => {
 
     fetchData()
   }, [user])
-
+  console.log('approve', approvedProposalsCount)
+  console.log('pending', pendingProposalsCount)
+  console.log('approve', budgetProposal.length)
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp)
     return date.toLocaleDateString('en-US', {
@@ -336,15 +353,27 @@ const EmpDashboard = () => {
           onChange={handleSearchInputChange}
         />
       </CForm>
-      <CDropdown className="mb-4">
-        <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
-        <CDropdownMenu>
-          <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
-          <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
-          <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
-        </CDropdownMenu>
-      </CDropdown>
-
+      <div className="d-flex align-items-center justify-content-between">
+        <CDropdown className="mb-4">
+          <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
+          <CDropdownMenu>
+            <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
+            <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
+            <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
+          </CDropdownMenu>
+        </CDropdown>
+        <div>
+          <CButton className="mb-3 text-white m-1" color="warning" style={{ width: '97px' }}>
+            Pending {pendingProposalsCount}
+          </CButton>
+          <CButton className="mb-3 text-white m-1" color="success" style={{ width: '97px' }}>
+            Approved {approvedProposalsCount}
+          </CButton>
+          <CButton className="mb-3 text-white m-1" color="secondary" style={{ width: '97px' }}>
+            Pending {budgetProposal.length}
+          </CButton>
+        </div>
+      </div>
       <CTable>
         <CTableHead>
           <CTableRow>
