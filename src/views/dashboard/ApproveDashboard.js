@@ -93,7 +93,6 @@ const ApproveDashboard = () => {
         setApprovedProposalsCount(approvedProposals.length)
         setBudgetProposals(userBudgetProposalsCount)
         setEmpUsers(userBudgetProposals)
-        console.log(userResponse)
       } catch (error) {
         console.error('Error fetching data:', error)
       }
