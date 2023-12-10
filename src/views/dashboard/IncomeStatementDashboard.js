@@ -593,12 +593,16 @@ const IncomeStatementDashboard = () => {
         />
       </CForm>
       <div className="d-flex justify-content-between">
-        <CButton className="mb-3">Total Revenue: {formatNumberWithCommas(totalRevenue)}</CButton>
-        <CButton className="mb-3">Total Income: {formatNumberWithCommas(totalIncome)}</CButton>
-        <CButton className="mb-3">
+        <CButton color="success" className="mb-3 text-white">
+          Total Revenue: {formatNumberWithCommas(totalRevenue)}
+        </CButton>
+        <CButton color="success" className="mb-3 text-white">
+          Total Income: {formatNumberWithCommas(totalIncome)}
+        </CButton>
+        <CButton color="success" className="mb-3 text-white">
           Total Net Income: {formatNumberWithCommas(totalNetIncome)}
         </CButton>
-        <CButton className="mb-3">
+        <CButton color="success" className="mb-3 text-white">
           Total Income Tax: {formatNumberWithCommas(totalIncomeTax)}
         </CButton>
       </div>
