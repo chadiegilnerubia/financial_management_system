@@ -2,6 +2,7 @@ import React from 'react'
 import ApproveDashboard from './views/dashboard/ApproveDashboard'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
+const ResetPassword = React.lazy(() => import('./views/dashboard/ResetPassword'))
 const EmpDashboard = React.lazy(() => import('./views/dashboard/EmpDashboard'))
 const BudgetProposal = React.lazy(() => import('./views/budget/BudgetProposal'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -59,6 +60,7 @@ const routes = [
   { path: '/dashboard-employee/:id', name: 'EmpDashboard', element: ApproveDashboard },
   { path: '/budget-proposal', name: 'BudgetProposal', element: BudgetProposal },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
+  { path: '/reset-password', name: 'ResetPassword', element: ResetPassword },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },

@@ -2,7 +2,6 @@ import React from 'react'
 import { useUser } from '../../context/UserContext'
 import {
   CAvatar,
-  CBadge,
   CDropdown,
   CDropdownDivider,
   CDropdownHeader,
@@ -10,19 +9,10 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import {
-  cilBell,
-  cilCreditCard,
-  cilCommentSquare,
-  cilEnvelopeOpen,
-  cilFile,
-  cilSettings,
-  cilTask,
-  cilUser,
-} from '@coreui/icons'
+import { cilSettings, cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import avatar8 from './../../assets/images/avatars/8.jpg'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const AppHeaderDropdown = () => {
   const navigate = useNavigate()
@@ -48,9 +38,9 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
-        <CDropdownItem href="#">
+        <CDropdownItem href="#/reset-password" onClick={() => navigate(`/reset-password`)}>
           <CIcon icon={cilSettings} className="me-2" />
-          Settings
+          Reset Password
         </CDropdownItem>
         {user !== null ? (
           <CDropdownItem href="#/logout" onClick={handleLogout}>

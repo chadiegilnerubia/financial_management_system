@@ -6,6 +6,7 @@ import routes from '../routes'
 
 const AppContent = () => {
   const { user } = useUser()
+  const isEmployee = user && user.role === 'employee'
 
   return (
     <CContainer lg>
@@ -20,7 +21,14 @@ const AppContent = () => {
                   path={route.path}
                   exact={route.exact}
                   name={route.name}
-                  element={<route.element />}
+                  element={
+                    // Check if the route is '/dashboard' and the user is an employee
+                    route.path === '/dashboard' && isEmployee ? (
+                      <Navigate to="/404" replace /> // Redirect to a forbidden page (replace with your desired route)
+                    ) : (
+                      <route.element />
+                    )
+                  }
                 />
               ) : (
                 <Route key={idx} path={route.path} element={<Navigate to="/login" replace />} />
