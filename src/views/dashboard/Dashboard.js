@@ -25,6 +25,7 @@ import {
 import axios from 'axios'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import { useUser } from '../../context/UserContext'
+import IncomeStatementDashboard from './IncomeStatementDashboard'
 
 const PAGE_SIZE = 3
 
@@ -334,6 +335,7 @@ const Dashboard = () => {
           </CCard>
         </CCol>
       </CRow>
+      <IncomeStatementDashboard />
     </>
   )
 }

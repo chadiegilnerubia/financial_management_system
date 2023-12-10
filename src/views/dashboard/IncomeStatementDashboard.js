@@ -1,4 +1,4 @@
-//EmpDashboard.js
+//IncomeStatementDashboard.js
 import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
 import { FaPen, FaTrash } from 'react-icons/fa'
@@ -28,13 +28,16 @@ import DeleteBudgetModal from './DeleteButtonModal'
 import { Pagination } from 'react-bootstrap'
 import { CAlert } from '@coreui/react'
 import useAlert from './useAlert'
+import EditIncomeStatementModal from './EditIncomeStatementModal'
+import DeleteIncomeModal from './DeleteIncomeModal'
 const PAGE_SIZE = 6
 
-const EmpDashboard = () => {
+const IncomeStatementDashboard = () => {
+  //old states
   const [empUsers, setEmpUsers] = useState([])
   const { user } = useUser()
   const [addBudget, setAddBudget] = useState(false)
-  const [editModalVisible, setEditModalVisible] = useState(new Array(empUsers.length).fill(false))
+
   const [deleteBudget, setDeleteBudget] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState(null)
   const [budgetToEdit, setBudgetToEdit] = useState(null)
@@ -42,6 +45,16 @@ const EmpDashboard = () => {
   const [budgetProposal, setBudgetProposals] = useState([])
   const [pendingProposalsCount, setPendingProposalsCount] = useState([])
   const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
+  const [incomeStatementDate, setIncomeStatementDate] = useState([])
+  const [totalRevenue, setTotalRevenue] = useState(0)
+  const [totalIncome, setTotalIncome] = useState(0)
+  const [totalNetIncome, setTotalNetIncome] = useState(0)
+  const [totalIncomeTax, setTotalIncomeTax] = useState(0)
+  const [editModalVisible, setEditModalVisible] = useState(
+    new Array(incomeStatementDate?.length || 0).fill(false),
+  )
+  //old states
+  //old functions
   const {
     isVisible: updateAlertVisible,
     showAlert: showUpdateAlert,
@@ -57,9 +70,16 @@ const EmpDashboard = () => {
   const { isVisible, showAlert, hideAlert, AlertComponent } = useAlert()
 
   const [formData, setFormData] = useState({
-    budget_proposal_amount: 0,
-    budget_proposal_name: '',
-    budget_proposal_description: '',
+    user_id: 0,
+    company_id: 0,
+    revenue: 0,
+    total_income: 0,
+    income_tax: 0,
+    net_income: 0,
+    comments: '',
+    submitter: '',
+    position: '',
+    company_name: '',
   })
   const [activePage, setActivePage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -107,6 +127,38 @@ const EmpDashboard = () => {
 
     fetchData()
   }, [user])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:3005/income-statements')
+        console.log(response)
+        setIncomeStatementDate(response.data)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
+  useEffect(() => {
+    // Calculate totals when incomeStatementDate changes
+    let revenueTotal = 0
+    let incomeTotal = 0
+    let netIncomeTotal = 0
+    let incomeTaxTotal = 0
+
+    incomeStatementDate.forEach((incomeStatement) => {
+      revenueTotal += incomeStatement.revenue
+      incomeTotal += incomeStatement.total_income
+      netIncomeTotal += incomeStatement.net_income
+      incomeTaxTotal += incomeStatement.income_tax
+    })
+
+    setTotalRevenue(revenueTotal)
+    setTotalIncome(incomeTotal)
+    setTotalNetIncome(netIncomeTotal)
+    setTotalIncomeTax(incomeTaxTotal)
+  }, [incomeStatementDate])
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp)
     return date.toLocaleDateString('en-US', {
@@ -119,7 +171,9 @@ const EmpDashboard = () => {
       hour12: true,
     })
   }
-
+  const formatNumberWithCommas = (number) => {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  }
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -173,6 +227,9 @@ const EmpDashboard = () => {
     setSearchQuery(e.target.value)
     setActivePage(1)
   }
+  useEffect(() => {
+    setEditModalVisible(new Array(incomeStatementDate.length).fill(false))
+  }, [incomeStatementDate])
 
   const handleEditModalClose = (index) => {
     setEditModalVisible((prev) => {
@@ -186,59 +243,48 @@ const EmpDashboard = () => {
       budget_proposal_description: '',
     })
   }
-
   const handleDelete = async () => {
     try {
       if (!budgetToDelete) {
-        console.error('No budget selected for deletion')
+        console.error('No income statement selected for deletion')
         return
       }
-
-      const { userId, budgetId } = budgetToDelete
+      const { id } = budgetToDelete
       // Perform the delete action by making a DELETE request
-      const response = await axios.delete(
-        `http://localhost:3005/proposals/user/${userId}/budget-proposal/${budgetId}`,
-      )
-      console.log(response)
+      const response = await axios.delete(`http://localhost:3005/income-statements/${id}`)
       if (response.status === 200) {
-        console.log('Budget deleted successfully')
-
+        console.log('Income statement deleted successfully')
         // Refetch data after successful deletion
-        const userResponse = await axios.get(
-          `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
-        )
-        const userBudgetProposals = userResponse.data.filter(
-          (proposal) => proposal.user_id === user.id,
-        )
-        setEmpUsers(userBudgetProposals)
+        const updatedIncomeStatements = await axios.get('http://localhost:3005/income-statements')
+        setIncomeStatementDate(updatedIncomeStatements.data)
         // Close the modal after successful deletion
         setDeleteBudget(false)
-        showDeleteAlert('Budget proposal deleted successfully!')
+        showDeleteAlert('Income statement deleted successfully!')
       } else {
-        console.error('Failed to delete budget')
+        console.error('Failed to delete income statement')
       }
     } catch (error) {
-      console.error('Error deleting budget:', error)
+      console.error('Error deleting income statement:', error)
     }
   }
 
   const handleUpdate = async () => {
+    // localhost:3005/income-statements/4
     try {
       const response = await axios.put(
-        `http://localhost:3005/proposals/user/${user.id}/budget-proposal/${budgetToEdit}`,
+        `http://localhost:3005/income-statements/${budgetToEdit}`,
         formData,
       )
       if (response.status === 200) {
-        console.log('Budget updated successfully')
+        console.log('Income statement updated successfully')
         // Refetch data after successful update
-        const userResponse = await axios.get(
-          `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
-        )
-        const userBudgetProposals = userResponse.data.filter(
-          (proposal) => proposal.user_id === user.id,
-        )
-        setEmpUsers(userBudgetProposals)
-
+        // const userResponse = await axios.get(`http://localhost:3005/proposals/${budgetToEdit}`)
+        // const userBudgetProposals = userResponse.data.filter(
+        //   (proposal) => proposal.user_id === user.id,
+        // )
+        // setEmpUsers(userBudgetProposals)
+        const response = await axios.get('http://localhost:3005/income-statements')
+        setIncomeStatementDate(response.data)
         setFormData({
           budget_proposal_amount: 0,
           budget_proposal_name: '',
@@ -259,7 +305,18 @@ const EmpDashboard = () => {
       newState[index] = true
       return newState
     })
-    setFormData(editedData)
+    // Use the editedData (comp) to set the correct formData
+    setFormData({
+      company_name: editedData.company_name,
+      revenue: editedData.revenue,
+      company_id: editedData.company_id,
+      total_income: editedData.total_income,
+      income_tax: editedData.income_tax,
+      net_income: editedData.net_income,
+      comments: editedData.comments,
+      submitter: editedData.submitter,
+      position: editedData.position,
+    })
     setBudgetToEdit(editedData.id)
   }
   const handleDeleteClick = (budget) => {
@@ -309,7 +366,8 @@ const EmpDashboard = () => {
           position: '', // Add the submitter's position here
           // Add other fields as needed
         })
-
+        const response = await axios.get('http://localhost:3005/income-statements')
+        setIncomeStatementDate(response.data)
         // Close the modal
         setSubmitIncomeStatement(false)
         showAlert('Income statement submitted successfully!')
@@ -321,18 +379,19 @@ const EmpDashboard = () => {
     }
   }
   const startIndex = (activePage - 1) * PAGE_SIZE
-  const filteredEmpUsers = empUsers
-    .filter((user) => user.budget_proposal_name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter((user) => {
-      if (selectedStatus === '') {
-        return true
-      } else if (selectedStatus === 'true') {
-        return user.budget_proposal_status === true
-      } else if (selectedStatus === 'false') {
-        return user.budget_proposal_status === false
-      }
-    })
+  const filteredEmpUsers = incomeStatementDate
+    .filter((comp) => comp.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    // .filter((comp) => {
+    //   if (selectedStatus === '') {
+    //     return true
+    //   } else if (selectedStatus === 'true') {
+    //     return comp.budget_proposal_status === true
+    //   } else if (selectedStatus === 'false') {
+    //     return comp.budget_proposal_status === false
+    //   }
+    // })
     .slice(startIndex, startIndex + PAGE_SIZE)
+  //old functions
 
   return (
     <>
@@ -344,7 +403,7 @@ const EmpDashboard = () => {
         <DeleteAlertComponent message="Budget proposal deleted successfully!" />
       )}
       <div className="d-flex justify-content-between align-item-center">
-        {user !== null && user.username != null && <h4>Employee's Dashboard: {user.username}</h4>}
+        {user !== null && user.username != null && <h4>Statement's Income Dashboard</h4>}
         <CButton
           className="mb-3"
           style={{ marginLeft: '500px' }}
@@ -527,75 +586,53 @@ const EmpDashboard = () => {
         <CFormInput
           type="text"
           id="searchBudgetProposal"
-          label="Search Budget Proposal"
-          placeholder="Enter budget name"
+          placeholder="Enter company name"
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
       </CForm>
-      <div className="d-flex align-items-center justify-content-between">
-        <CDropdown className="mb-4">
-          <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
-          <CDropdownMenu>
-            <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
-            <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
-            <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
-          </CDropdownMenu>
-        </CDropdown>
-        <div>
-          <CButton className="mb-3 text-white m-1" color="warning" style={{ width: '97px' }}>
-            Pending {pendingProposalsCount}
-          </CButton>
-          <CButton className="mb-3 text-white m-1" color="success" style={{ width: '97px' }}>
-            Approved {approvedProposalsCount}
-          </CButton>
-          <CButton className="mb-3 text-white m-1" color="secondary" style={{ width: '97px' }}>
-            Pending {budgetProposal.length}
-          </CButton>
-        </div>
+      <div className="d-flex justify-content-between">
+        <CButton className="mb-3">Total Revenue: {formatNumberWithCommas(totalRevenue)}</CButton>
+        <CButton className="mb-3">Total Income: {formatNumberWithCommas(totalIncome)}</CButton>
+        <CButton className="mb-3">
+          Total Net Income: {formatNumberWithCommas(totalNetIncome)}
+        </CButton>
+        <CButton className="mb-3">
+          Total Income Tax: {formatNumberWithCommas(totalIncomeTax)}
+        </CButton>
       </div>
       <CTable>
         <CTableHead>
           <CTableRow>
-            <CTableHeaderCell scope="col">Status</CTableHeaderCell>
-            <CTableHeaderCell scope="col">Name</CTableHeaderCell>
-            <CTableHeaderCell scope="col">Amount</CTableHeaderCell>
-            <CTableHeaderCell scope="col">Description</CTableHeaderCell>
-            <CTableHeaderCell scope="col">Created At</CTableHeaderCell>
+            <CTableHeaderCell scope="col">ID</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Company Name</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Revenue</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Total Income</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Net Income</CTableHeaderCell>
+            <CTableHeaderCell scope="col">Income Tax</CTableHeaderCell>
             <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
         <CTableBody>
-          {filteredEmpUsers.map((user, index) => (
+          {filteredEmpUsers.map((comp, index) => (
             <CTableRow key={index}>
-              <CTableDataCell>
-                {user.budget_proposal_status === true ? (
-                  <>
-                    <CButton className="mb-3 text-white" color="success">
-                      Approved
-                    </CButton>
-                  </>
-                ) : (
-                  <CButton className="mb-3 text-white" color="warning" style={{ width: '97px' }}>
-                    Pending
-                  </CButton>
-                )}
-              </CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_description}</CTableDataCell>
-              <CTableDataCell>{formatTimestamp(user.createdAt)}</CTableDataCell>
+              <CTableDataCell>{comp.id}</CTableDataCell>
+              <CTableDataCell>{comp.company_name}</CTableDataCell>
+              <CTableDataCell>{comp.revenue}</CTableDataCell>
+              <CTableDataCell>{comp.total_income}</CTableDataCell>
+              <CTableDataCell>{comp.net_income}</CTableDataCell>
+              <CTableDataCell>{comp.income_tax}</CTableDataCell>
               <CTableDataCell>
                 <div className="d-flex">
                   <CButton
                     className="mb-3"
                     style={{ marginRight: '20px' }}
-                    onClick={() => handleEditClick(user, index)}
+                    onClick={() => handleEditClick(comp, index)}
                   >
                     <FaPen />
                   </CButton>
                   {editModalVisible[index] && (
-                    <EditBudgetModal
+                    <EditIncomeStatementModal
                       visible={editModalVisible[index]}
                       onClose={() => handleEditModalClose(index)}
                       formData={formData}
@@ -608,13 +645,11 @@ const EmpDashboard = () => {
                     <CButton
                       className="mb-3 text-white"
                       color="danger"
-                      onClick={() => {
-                        handleDeleteClick({ userId: user.user_id, budgetId: user.id })
-                      }}
+                      onClick={() => handleDeleteClick(comp)}
                     >
                       <FaTrash />
                     </CButton>
-                    <DeleteBudgetModal
+                    <DeleteIncomeModal
                       visible={deleteBudget}
                       onClose={() => setDeleteBudget(false)}
                       handleDelete={handleDelete}
@@ -643,4 +678,4 @@ const EmpDashboard = () => {
   )
 }
 
-export default EmpDashboard
+export default IncomeStatementDashboard
