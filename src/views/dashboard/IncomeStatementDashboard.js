@@ -619,10 +619,10 @@ const IncomeStatementDashboard = () => {
             <CTableRow key={index}>
               <CTableDataCell>{comp.id}</CTableDataCell>
               <CTableDataCell>{comp.company_name}</CTableDataCell>
-              <CTableDataCell>{comp.revenue}</CTableDataCell>
-              <CTableDataCell>{comp.total_income}</CTableDataCell>
-              <CTableDataCell>{comp.net_income}</CTableDataCell>
-              <CTableDataCell>{comp.income_tax}</CTableDataCell>
+              <CTableDataCell>{formatNumberWithCommas(comp.revenue)}</CTableDataCell>
+              <CTableDataCell>{formatNumberWithCommas(comp.total_income)}</CTableDataCell>
+              <CTableDataCell>{formatNumberWithCommas(comp.net_income)}</CTableDataCell>
+              <CTableDataCell>{formatNumberWithCommas(comp.income_tax)}</CTableDataCell>
               <CTableDataCell>
                 <div className="d-flex">
                   <CButton
