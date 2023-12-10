@@ -40,6 +40,9 @@ const ApproveDashboard = () => {
   const [budgetToEdit, setBudgetToEdit] = useState(null)
   const [selectedStatus, setSelectedStatus] = useState('')
   const [refreshProposals, setRefreshProposals] = useState(false)
+  const [budgetProposal, setBudgetProposals] = useState([])
+  const [pendingProposalsCount, setPendingProposalsCount] = useState([])
+  const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
   const { id: paramId } = useParams()
   const {
     isVisible: updateAlertVisible,
@@ -69,10 +72,26 @@ const ApproveDashboard = () => {
         const userResponse = await axios.get(
           `http://localhost:3005/proposals/user/${user.id}/budget-proposal`,
         )
+        const budgetProposalResponse = await axios.get(
+          'http://localhost:3005/proposals/budget-proposals',
+        )
         const userBudgetProposals = userResponse.data.filter((proposal) => {
           const userId = parseInt(paramId, 10)
           return proposal.user_id === userId
         })
+        const allBudgetProposals = budgetProposalResponse.data
+        const pendingProposals = allBudgetProposals.filter(
+          (proposal) => !proposal.budget_proposal_status,
+        )
+        const approvedProposals = allBudgetProposals.filter(
+          (proposal) => proposal.budget_proposal_status,
+        )
+        const userBudgetProposalsCount = userResponse.data.filter(
+          (proposal) => proposal.user_id === user.id,
+        )
+        setPendingProposalsCount(pendingProposals.length)
+        setApprovedProposalsCount(approvedProposals.length)
+        setBudgetProposals(userBudgetProposalsCount)
         setEmpUsers(userBudgetProposals)
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -353,14 +372,27 @@ const ApproveDashboard = () => {
           </CModalBody>
         </CModal>
       </div>
-      <CDropdown>
-        <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
-        <CDropdownMenu>
-          <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
-          <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
-          <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
-        </CDropdownMenu>
-      </CDropdown>
+      <div className="d-flex align-items-center justify-content-between">
+        <CDropdown className="mb-4">
+          <CDropdownToggle color="primary">Filter by Status</CDropdownToggle>
+          <CDropdownMenu>
+            <CDropdownItem onClick={() => setSelectedStatus('')}>All</CDropdownItem>
+            <CDropdownItem onClick={() => setSelectedStatus('true')}>Approved</CDropdownItem>
+            <CDropdownItem onClick={() => setSelectedStatus('false')}>Pending</CDropdownItem>
+          </CDropdownMenu>
+        </CDropdown>
+        <div>
+          <CButton className="mb-3 text-white m-1" color="warning" style={{ width: '97px' }}>
+            Pending {pendingProposalsCount}
+          </CButton>
+          <CButton className="mb-3 text-white m-1" color="success" style={{ width: '97px' }}>
+            Approved {approvedProposalsCount}
+          </CButton>
+          <CButton className="mb-3 text-white m-1" color="secondary" style={{ width: '97px' }}>
+            Proposals {budgetProposal.length}
+          </CButton>
+        </div>
+      </div>
       <CForm className="mb-5">
         <CFormInput
           type="text"
