@@ -15,11 +15,11 @@ import CIcon from '@coreui/icons-react'
 import { cilBell, cilEnvelopeOpen, cilList, cilMenu } from '@coreui/icons'
 import { AppHeaderDropdown } from './header/index'
 import { logo } from 'src/assets/brand/logo'
-
+import { useUser } from 'src/context/UserContext'
 const AppHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
-
+  const { user } = useUser()
   return (
     <CHeader position="sticky" className="mb-4">
       <CContainer fluid>
@@ -34,9 +34,15 @@ const AppHeader = () => {
         </CHeaderBrand>
         <CHeaderNav className="d-none d-md-flex me-auto">
           <CNavItem>
-            <CNavLink to="/dashboard" component={NavLink}>
-              Dashboard
-            </CNavLink>
+            {user && user.role === 'manager' ? (
+              <CNavLink to="/dashboard" component={NavLink}>
+                Dashboard
+              </CNavLink>
+            ) : (
+              <CNavLink to="/dashboard-employee" component={NavLink}>
+                Dashboard
+              </CNavLink>
+            )}
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav>
