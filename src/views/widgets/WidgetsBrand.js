@@ -1,11 +1,53 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { CWidgetStatsD, CRow, CCol } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cibFacebook, cibLinkedin, cibTwitter, cilCalendar } from '@coreui/icons'
+import {
+  cibFacebook,
+  cibLinkedin,
+  cibTwitter,
+  cilCalendar,
+  cibPlayerMe,
+  cilCheck,
+  cilWarning,
+} from '@coreui/icons'
 import { CChart } from '@coreui/react-chartjs'
+import axios from 'axios'
 
 const WidgetsBrand = ({ withCharts }) => {
+  const [users, setUsers] = useState([])
+  const [budgetProposal, setBudgetProposals] = useState([])
+  const [pendingProposalsCount, setPendingProposalsCount] = useState([])
+  const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userResponse = await axios.get('http://localhost:3005/users')
+        const budgetProposalResponse = await axios.get(
+          'http://localhost:3005/proposals/budget-proposals',
+        )
+
+        const allBudgetProposals = budgetProposalResponse.data
+        const pendingProposals = allBudgetProposals.filter(
+          (proposal) => !proposal.budget_proposal_status,
+        )
+        const approvedProposals = allBudgetProposals.filter(
+          (proposal) => proposal.budget_proposal_status,
+        )
+
+        setUsers(userResponse.data)
+        setBudgetProposals(allBudgetProposals)
+        setPendingProposalsCount(pendingProposals.length)
+        setApprovedProposalsCount(approvedProposals.length)
+      } catch (error) {
+        console.error('Error fetching data:', error.message)
+        // Handle error, show an error message, etc.
+      }
+    }
+
+    // Call the fetchData function when the component mounts
+    fetchData()
+  }, [])
   const chartOptions = {
     elements: {
       line: {
@@ -61,11 +103,8 @@ const WidgetsBrand = ({ withCharts }) => {
               />
             ),
           })}
-          icon={<CIcon icon={cibFacebook} height={52} className="my-4 text-white" />}
-          values={[
-            { title: 'friends', value: '89K' },
-            { title: 'feeds', value: '459' },
-          ]}
+          icon={<CIcon icon={cibPlayerMe} height={52} className="my-4 text-white" />}
+          values={[{ title: 'users', value: users.length }]}
           style={{
             '--cui-card-cap-bg': '#3b5998',
           }}
@@ -73,6 +112,70 @@ const WidgetsBrand = ({ withCharts }) => {
       </CCol>
 
       <CCol sm={6} lg={3}>
+        <CWidgetStatsD
+          className="mb-4"
+          {...(withCharts && {
+            chart: (
+              <CChart
+                className="position-absolute w-100 h-100"
+                type="line"
+                data={{
+                  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                  datasets: [
+                    {
+                      backgroundColor: 'rgba(255,255,255,.1)',
+                      borderColor: 'rgba(255,255,255,.55)',
+                      pointHoverBackgroundColor: '#fff',
+                      borderWidth: 2,
+                      data: [65, 59, 84, 84, 51, 55, 40],
+                      fill: true,
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            ),
+          })}
+          icon={<CIcon icon={cilWarning} height={52} className="my-4 text-white" />}
+          values={[{ title: 'Pending Proposals', value: pendingProposalsCount }]}
+          style={{
+            '--cui-card-cap-bg': '#3b5998',
+          }}
+        />
+      </CCol>
+      <CCol sm={6} lg={3}>
+        <CWidgetStatsD
+          className="mb-4"
+          {...(withCharts && {
+            chart: (
+              <CChart
+                className="position-absolute w-100 h-100"
+                type="line"
+                data={{
+                  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                  datasets: [
+                    {
+                      backgroundColor: 'rgba(255,255,255,.1)',
+                      borderColor: 'rgba(255,255,255,.55)',
+                      pointHoverBackgroundColor: '#fff',
+                      borderWidth: 2,
+                      data: [65, 59, 84, 84, 51, 55, 40],
+                      fill: true,
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            ),
+          })}
+          icon={<CIcon icon={cilCheck} height={52} className="my-4 text-white" />}
+          values={[{ title: 'Approved Proposals', value: approvedProposalsCount }]}
+          style={{
+            '--cui-card-cap-bg': '#3b5998',
+          }}
+        />
+      </CCol>
+      {/* <CCol sm={6} lg={3}>
         <CWidgetStatsD
           className="mb-4"
           {...(withCharts && {
@@ -106,9 +209,9 @@ const WidgetsBrand = ({ withCharts }) => {
             '--cui-card-cap-bg': '#00aced',
           }}
         />
-      </CCol>
+      </CCol> */}
 
-      <CCol sm={6} lg={3}>
+      {/* <CCol sm={6} lg={3}>
         <CWidgetStatsD
           className="mb-4"
           {...(withCharts && {
@@ -142,7 +245,7 @@ const WidgetsBrand = ({ withCharts }) => {
             '--cui-card-cap-bg': '#4875b4',
           }}
         />
-      </CCol>
+      </CCol> */}
 
       <CCol sm={6} lg={3}>
         <CWidgetStatsD
@@ -171,10 +274,7 @@ const WidgetsBrand = ({ withCharts }) => {
             ),
           })}
           icon={<CIcon icon={cilCalendar} height={52} className="my-4 text-white" />}
-          values={[
-            { title: 'events', value: '12+' },
-            { title: 'meetings', value: '4' },
-          ]}
+          values={[{ title: 'buget proposals', value: budgetProposal.length }]}
         />
       </CCol>
     </CRow>
