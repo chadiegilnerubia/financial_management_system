@@ -79,12 +79,13 @@ const ApproveDashboard = () => {
           const userId = parseInt(paramId, 10)
           return proposal.user_id === userId
         })
+        const userId = user.id
         const allBudgetProposals = budgetProposalResponse.data
         const pendingProposals = allBudgetProposals.filter(
-          (proposal) => !proposal.budget_proposal_status,
+          (proposal) => proposal.user_id === userId && !proposal.budget_proposal_status,
         )
         const approvedProposals = allBudgetProposals.filter(
-          (proposal) => proposal.budget_proposal_status,
+          (proposal) => proposal.user_id === userId && proposal.budget_proposal_status,
         )
         const userBudgetProposalsCount = userResponse.data.filter(
           (proposal) => proposal.user_id === user.id,
@@ -316,61 +317,6 @@ const ApproveDashboard = () => {
       )}
       <div className="d-flex justify-content-between align-item-center">
         {user !== null ? <h4>Manager's Dashboard: {user.username}</h4> : null}
-
-        <CButton className="mb-3" onClick={() => setAddBudget(!addBudget)}>
-          Propose new Budget
-        </CButton>
-        <CModal
-          visible={addBudget}
-          onClose={() => setAddBudget(false)}
-          aria-labelledby="addBudgetLabel"
-        >
-          <CModalHeader onClose={() => setAddBudget(false)}>
-            <CModalTitle id="addBudgetLabel" className="text-center m-2">
-              Propose a budget
-            </CModalTitle>
-          </CModalHeader>
-          <CModalBody>
-            <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
-              <form onSubmit={handleSubmit}>
-                {/* <h3 className="text-center m-2">Propose a budget</h3> */}
-                <div className="mb-3">
-                  <label className="form-label">Budget Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="budget_proposal_name"
-                    value={formData.budget_proposal_name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Amount</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="budget_proposal_amount"
-                    value={formData.budget_proposal_amount}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    id="budget_proposal_description"
-                    value={formData.budget_proposal_description}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary">
-                  Submit
-                </button>
-              </form>
-            </div>
-          </CModalBody>
-        </CModal>
       </div>
       <div className="d-flex align-items-center justify-content-between">
         <CDropdown className="mb-4">
@@ -416,69 +362,84 @@ const ApproveDashboard = () => {
           </CTableRow>
         </CTableHead>
         <CTableBody>
-          {filteredEmpUsers.map((user, index) => (
-            <CTableRow key={index}>
-              <CTableDataCell>
-                {user.budget_proposal_status === true ? 'Approved' : 'Pending'}
-              </CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>
-              <CTableDataCell>{user.budget_proposal_description}</CTableDataCell>
-              <CTableDataCell>{formatTimestamp(user.createdAt)}</CTableDataCell>
-              <CTableDataCell>
-                <div className="d-flex">
-                  <>
+          <>
+            {filteredEmpUsers.length === 0 && (
+              <p
+                className="text-center m-2"
+                style={{
+                  width: '67.1%',
+                  position: 'absolute',
+                  fontWeight: 'Bold',
+                  fontSize: '30px',
+                }}
+              >
+                No Data
+              </p>
+            )}
+            {filteredEmpUsers.map((user, index) => (
+              <CTableRow key={index}>
+                <CTableDataCell>
+                  {user.budget_proposal_status === true ? 'Approved' : 'Pending'}
+                </CTableDataCell>
+                <CTableDataCell>{user.budget_proposal_name}</CTableDataCell>
+                <CTableDataCell>{user.budget_proposal_amount}</CTableDataCell>
+                <CTableDataCell>{user.budget_proposal_description}</CTableDataCell>
+                <CTableDataCell>{formatTimestamp(user.createdAt)}</CTableDataCell>
+                <CTableDataCell>
+                  <div className="d-flex">
+                    <>
+                      <CButton
+                        className="mb-3 text-white"
+                        color={user.budget_proposal_status ? 'success' : 'warning'}
+                        style={{ marginRight: '20px', width: '97px' }}
+                        onClick={() => handleApproveClick(user.id)}
+                      >
+                        {user.budget_proposal_status ? 'Approved' : 'Pending'}
+                      </CButton>
+                      <DeleteBudgetModal
+                        visible={deleteBudget}
+                        onClose={() => setDeleteBudget(false)}
+                        handleDelete={handleDelete}
+                      />
+                    </>
                     <CButton
-                      className="mb-3 text-white"
-                      color={user.budget_proposal_status ? 'success' : 'warning'}
-                      style={{ marginRight: '20px', width: '97px' }}
-                      onClick={() => handleApproveClick(user.id)}
+                      className="mb-3"
+                      style={{ marginRight: '20px' }}
+                      onClick={() => handleEditClick(user, index)}
                     >
-                      {user.budget_proposal_status ? 'Approved' : 'Pending'}
+                      <FaPen />
                     </CButton>
-                    <DeleteBudgetModal
-                      visible={deleteBudget}
-                      onClose={() => setDeleteBudget(false)}
-                      handleDelete={handleDelete}
-                    />
-                  </>
-                  <CButton
-                    className="mb-3"
-                    style={{ marginRight: '20px' }}
-                    onClick={() => handleEditClick(user, index)}
-                  >
-                    <FaPen />
-                  </CButton>
-                  {editModalVisible[index] && (
-                    <EditBudgetModal
-                      visible={editModalVisible[index]}
-                      onClose={() => handleEditModalClose(index)}
-                      formData={formData}
-                      handleInputChange={handleInputChange}
-                      handleSubmit={handleSubmit}
-                      handleUpdate={handleUpdate}
-                    />
-                  )}
-                  <>
-                    <CButton
-                      className="mb-3 text-white"
-                      color="danger"
-                      onClick={() => {
-                        handleDeleteClick({ userId: user.user_id, budgetId: user.id })
-                      }}
-                    >
-                      <FaTrash />
-                    </CButton>
-                    <DeleteBudgetModal
-                      visible={deleteBudget}
-                      onClose={() => setDeleteBudget(false)}
-                      handleDelete={handleDelete}
-                    />
-                  </>
-                </div>
-              </CTableDataCell>
-            </CTableRow>
-          ))}
+                    {editModalVisible[index] && (
+                      <EditBudgetModal
+                        visible={editModalVisible[index]}
+                        onClose={() => handleEditModalClose(index)}
+                        formData={formData}
+                        handleInputChange={handleInputChange}
+                        handleSubmit={handleSubmit}
+                        handleUpdate={handleUpdate}
+                      />
+                    )}
+                    <>
+                      <CButton
+                        className="mb-3 text-white"
+                        color="danger"
+                        onClick={() => {
+                          handleDeleteClick({ userId: user.user_id, budgetId: user.id })
+                        }}
+                      >
+                        <FaTrash />
+                      </CButton>
+                      <DeleteBudgetModal
+                        visible={deleteBudget}
+                        onClose={() => setDeleteBudget(false)}
+                        handleDelete={handleDelete}
+                      />
+                    </>
+                  </div>
+                </CTableDataCell>
+              </CTableRow>
+            ))}
+          </>
         </CTableBody>
       </CTable>
       <div className="d-flex justify-content-center mt-3">

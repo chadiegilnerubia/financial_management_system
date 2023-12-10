@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Pagination } from 'react-bootstrap'
+import { cilArrowCircleRight } from '@coreui/icons'
 import {
   CButton,
   CCard,
@@ -26,6 +27,7 @@ import axios from 'axios'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import { useUser } from '../../context/UserContext'
 import IncomeStatementDashboard from './IncomeStatementDashboard'
+import CustomPagination from './CustomePagination'
 
 const PAGE_SIZE = 3
 
@@ -202,7 +204,9 @@ const Dashboard = () => {
       <CRow>
         <CCol xs>
           <CCard className="mb-4">
-            <CCardHeader>Traffic {' & '} Sales</CCardHeader>
+            <CCardHeader>
+              <h3>User's table</h3>
+            </CCardHeader>
             <CCardBody>
               <br />
 
@@ -213,24 +217,14 @@ const Dashboard = () => {
                     <CTableHeaderCell>User</CTableHeaderCell>
                     <CTableHeaderCell>Email</CTableHeaderCell>
                     <CTableHeaderCell>User Type</CTableHeaderCell>
-                    <CTableHeaderCell>Action</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {filteredEmpUsers.map((user, index) => (
                     <CTableRow key={index}>
-                      <CTableDataCell>
+                      {/* <CTableDataCell>
                         <div>{user.budget_proposal_status === true ? 'Approved' : 'Pending'}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div>{user.username}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div>{user.email}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div>{user.role}</div>
-                      </CTableDataCell>
+                      </CTableDataCell> */}
                       <CTableDataCell>
                         {user.budget_proposal_status === true ? (
                           <>
@@ -238,8 +232,7 @@ const Dashboard = () => {
                               className="bg-success border-0"
                               onClick={() => setApprove(!approve)}
                             >
-                              <span>Approved</span>
-                              {console.log(user.budget_proposal_status)}
+                              <span>Approve</span>
                             </CButton>
                             <CModal
                               visible={approve}
@@ -275,10 +268,9 @@ const Dashboard = () => {
                               <>
                                 <CButton
                                   className="bg-warning border-0"
-                                  style={{ width: '97px' }}
                                   onClick={() => toggleVisible(user.id)}
                                 >
-                                  <span>Pending</span>
+                                  <span>Approve</span>
                                 </CButton>
                                 <CModal
                                   visible={visibleMap[user.id] || false}
@@ -311,30 +303,34 @@ const Dashboard = () => {
                           </>
                         )}
                       </CTableDataCell>
+                      <CTableDataCell>
+                        <div>{user.username}</div>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <div>{user.email}</div>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <div>{user.role}</div>
+                      </CTableDataCell>
                     </CTableRow>
                   ))}
                 </CTableBody>
               </CTable>
 
               <div className="d-flex justify-content-center mt-3">
-                <Pagination>
-                  {Array.from({ length: Math.ceil(combinedData.length / PAGE_SIZE) }).map(
-                    (_, index) => (
-                      <Pagination.Item
-                        key={index + 1}
-                        active={index + 1 === activePage}
-                        onClick={() => handlePageChange(index + 1)}
-                      >
-                        {index + 1}
-                      </Pagination.Item>
-                    ),
-                  )}
-                </Pagination>
+                <CustomPagination
+                  totalPages={Math.ceil(combinedData.length / PAGE_SIZE)}
+                  activePage={activePage}
+                  handlePageChange={handlePageChange}
+                />
               </div>
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
+      <div>
+        <hr />
+      </div>
       <IncomeStatementDashboard />
     </>
   )

@@ -30,6 +30,7 @@ import { CAlert } from '@coreui/react'
 import useAlert from './useAlert'
 import EditIncomeStatementModal from './EditIncomeStatementModal'
 import DeleteIncomeModal from './DeleteIncomeModal'
+import CustomPagination from './CustomePagination'
 const PAGE_SIZE = 6
 
 const IncomeStatementDashboard = () => {
@@ -662,17 +663,11 @@ const IncomeStatementDashboard = () => {
         </CTableBody>
       </CTable>
       <div className="d-flex justify-content-center mt-3">
-        <Pagination>
-          {Array.from({ length: Math.ceil(empUsers.length / PAGE_SIZE) }).map((_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={index + 1 === activePage}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          ))}
-        </Pagination>
+        <CustomPagination
+          totalPages={Math.ceil(empUsers.length / PAGE_SIZE)}
+          activePage={activePage}
+          handlePageChange={handlePageChange}
+        />
       </div>
     </>
   )

@@ -1,6 +1,8 @@
 //EmpDashboard.js
+import CustomPagination from './CustomePagination' // Adjust the path as needed
 import 'react-toastify/dist/ReactToastify.css'
 import React, { useState, useEffect } from 'react'
+import { CPagination, CPaginationItem } from '@coreui/react' // Assuming you are using CoreUI components
 import { FaPen, FaTrash } from 'react-icons/fa'
 import {
   CButton,
@@ -84,22 +86,22 @@ const EmpDashboard = () => {
         const budgetProposalResponse = await axios.get(
           'http://localhost:3005/proposals/budget-proposals',
         )
+        const userId = user.id
         const allBudgetProposals = budgetProposalResponse.data
-        const pendingProposals = allBudgetProposals.filter(
-          (proposal) => !proposal.budget_proposal_status,
-        )
         const approvedProposals = allBudgetProposals.filter(
-          (proposal) => proposal.budget_proposal_status,
+          (proposal) => proposal.user_id === userId && proposal.budget_proposal_status,
         )
         const userBudgetProposals = userResponse.data.filter(
           (proposal) => proposal.user_id === user.id,
         )
-
-        setEmpUsers(userBudgetProposals)
-        setBudgetProposals(allBudgetProposals)
-        setPendingProposalsCount(pendingProposals.length)
+        const userPendingProposals = allBudgetProposals.filter(
+          (proposal) => proposal.user_id === userId && !proposal.budget_proposal_status,
+        )
+        // Set the user's pending proposals count to state
+        setPendingProposalsCount(userPendingProposals.length)
         setApprovedProposalsCount(approvedProposals.length)
-        console.log(userBudgetProposals)
+        setBudgetProposals(userBudgetProposals)
+        setEmpUsers(userBudgetProposals)
       } catch (error) {
         console.error('Error fetching data:', error)
       }
@@ -550,7 +552,7 @@ const EmpDashboard = () => {
             Approved {approvedProposalsCount}
           </CButton>
           <CButton className="mb-3 text-white m-1" color="secondary" style={{ width: '97px' }}>
-            Pending {budgetProposal.length}
+            Proposals {budgetProposal.length}
           </CButton>
         </div>
       </div>
@@ -627,17 +629,11 @@ const EmpDashboard = () => {
         </CTableBody>
       </CTable>
       <div className="d-flex justify-content-center mt-3">
-        <Pagination>
-          {Array.from({ length: Math.ceil(empUsers.length / PAGE_SIZE) }).map((_, index) => (
-            <Pagination.Item
-              key={index + 1}
-              active={index + 1 === activePage}
-              onClick={() => handlePageChange(index + 1)}
-            >
-              {index + 1}
-            </Pagination.Item>
-          ))}
-        </Pagination>
+        <CustomPagination
+          totalPages={Math.ceil(empUsers.length / PAGE_SIZE)}
+          activePage={activePage}
+          handlePageChange={handlePageChange}
+        />
       </div>
     </>
   )
