@@ -17,6 +17,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import useFormValidation from 'src/views/dashboard/useFormValidation'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -24,6 +25,8 @@ const Login = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useUser()
+  const { isVisible, showAlert, hideAlert, AlertComponent } = useFormValidation()
+  const [errorReset, setErrorReset] = useState(false)
 
   const handleLogin = async () => {
     try {
@@ -33,9 +36,10 @@ const Login = () => {
       })
 
       console.log('Response data:', response.data)
-
+      setErrorReset(false)
       if (response.data.user) {
         login(response.data.user)
+        setErrorReset(false)
         const userType = response.data.user.role
         if (userType === 'manager') {
           navigate('/dashboard')
@@ -50,6 +54,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error('An error occurred during login:', error.message)
+      setErrorReset(true)
       setError('An error occurred during login. Please try again later.')
     }
   }
@@ -64,6 +69,9 @@ const Login = () => {
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8}>
+            {errorReset && (
+              <AlertComponent message="Make sure to login your correct credentials." />
+            )}
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
