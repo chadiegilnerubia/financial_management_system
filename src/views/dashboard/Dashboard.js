@@ -28,6 +28,7 @@ import WidgetsBrand from '../widgets/WidgetsBrand'
 import { useUser } from '../../context/UserContext'
 import IncomeStatementDashboard from './IncomeStatementDashboard'
 import CustomPagination from './CustomePagination'
+import io from 'socket.io-client'
 
 const PAGE_SIZE = 3
 
@@ -39,14 +40,14 @@ const Dashboard = () => {
   const [approve, setApprove] = useState(false)
   const [addBudget, setAddBudget] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const { user } = useUser()
+  const { user, handleNewBudgetPost, budgetPosts } = useUser()
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     amount: 0,
     budget_name: '', // Added the budget_name field
     description: '', // Added the description field
   })
-
+  const [posts, setPosts] = useState([])
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -64,6 +65,31 @@ const Dashboard = () => {
     }
     fetchData()
   }, [user])
+  useEffect(() => {
+    // Connect to the WebSocket server
+    const socket = io('http://localhost:3005')
+    // Log when the connection is established
+    socket.on('connect', () => {
+      console.log('Socket connected')
+    })
+    // Log when a new post is received
+    socket.on('newBudgetProposal', (newPost) => {
+      console.log('New post received:', newPost)
+      setPosts((prevPosts) => [...prevPosts, newPost])
+      handleNewBudgetPost(posts)
+    })
+    // Log when the socket is disconnected
+    socket.on('disconnect', () => {
+      console.log('Socket disconnected')
+    })
+    // Clean up the socket connection on unmount
+    return () => {
+      socket.disconnect()
+      console.log('Socket disconnected on unmount')
+    }
+  }, [handleNewBudgetPost, posts])
+  console.log('POST->', posts)
+  console.log('budgetPOST->', budgetPosts)
   console.log(user)
   const handlePageChange = (pageNumber) => {
     setActivePage(pageNumber)

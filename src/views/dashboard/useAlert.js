@@ -20,7 +20,7 @@ const useAlert = () => {
   }
 
   const AlertComponent = ({ message }) => (
-    <CAlert color="success" fade onClose={hideAlert}>
+    <CAlert color="success" onClose={hideAlert}>
       {message}
     </CAlert>
   )

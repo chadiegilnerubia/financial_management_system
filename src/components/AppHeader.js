@@ -19,7 +19,7 @@ import { useUser } from 'src/context/UserContext'
 const AppHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
-  const { user } = useUser()
+  const { user, budgetPosts } = useUser()
   return (
     <CHeader position="sticky" className="mb-4">
       <CContainer fluid>
@@ -47,17 +47,23 @@ const AppHeader = () => {
         </CHeaderNav>
         <CHeaderNav>
           <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilBell} size="lg" />
-            </CNavLink>
+            {/* <CIcon icon={cilBell} size="lg" /> New Post: {budgetPosts.length} */}
+            <CIcon icon={cilBell} size="lg" />
+            <span
+              style={{
+                marginTop: '7.5px',
+                color: 'red',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'inline-block',
+              }}
+            >
+              {budgetPosts.length}
+            </span>
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilList} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
+            <CNavLink>
               <CIcon icon={cilEnvelopeOpen} size="lg" />
             </CNavLink>
           </CNavItem>

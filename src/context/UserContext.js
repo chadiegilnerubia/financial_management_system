@@ -5,12 +5,18 @@ const UserContext = createContext(null)
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [budgetPosts, setBudgetPosts] = useState([])
 
   // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
+    const storedBudgetPosts = localStorage.getItem('budgetPosts')
+
     if (storedUser) {
       setUser(JSON.parse(storedUser))
+    }
+    if (storedBudgetPosts) {
+      setBudgetPosts(JSON.parse(storedBudgetPosts))
     }
   }, [])
 
@@ -29,8 +35,35 @@ export const UserProvider = ({ children }) => {
     // Remove user data from localStorage on logout
     localStorage.removeItem('user')
   }
+  const addBudgetPost = (newBudgetPost) => {
+    console.log('Adding new budget post:', newBudgetPost)
+    const updatedBudgetPosts = [...budgetPosts, newBudgetPost]
 
-  return <UserContext.Provider value={{ user, login, logout }}>{children}</UserContext.Provider>
+    // Update state
+    setBudgetPosts(updatedBudgetPosts)
+
+    // Save updated budgetPosts to localStorage
+    localStorage.setItem('budgetPosts', JSON.stringify(updatedBudgetPosts))
+  }
+
+  // Handle new budget post from WebSocket
+  const handleNewBudgetPost = (newPost) => {
+    console.log('Adding new budget post:', newPost)
+    const updatedBudgetPosts = [...budgetPosts, newPost]
+
+    // Update state
+    setBudgetPosts(updatedBudgetPosts)
+
+    // Save updated budgetPosts to localStorage
+    localStorage.setItem('budgetPosts', JSON.stringify(updatedBudgetPosts))
+  }
+  return (
+    <UserContext.Provider
+      value={{ user, login, logout, budgetPosts, addBudgetPost, handleNewBudgetPost }}
+    >
+      {children}
+    </UserContext.Provider>
+  )
 }
 
 UserProvider.propTypes = {
