@@ -406,7 +406,7 @@ const IncomeStatementDashboard = () => {
       <div className="d-flex justify-content-between align-item-center">
         {user !== null && user.username != null && <h4>Statement's Income Dashboard</h4>}
         <CButton
-          className="mb-3"
+          className="mb-3 m-1"
           style={{ marginLeft: '500px' }}
           onClick={() => setSubmitIncomeStatement(!submitIncomeStatement)}
         >
