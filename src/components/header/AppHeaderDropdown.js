@@ -31,10 +31,10 @@ const AppHeaderDropdown = () => {
         <CDropdownHeader className="bg-light fw-semibold py-2">
           {user != null ? user.username : 'No user'}
         </CDropdownHeader>
-        <CDropdownItem href="#">
-          {user !== null && <CDropdownItem href="#">Role: {user.role}</CDropdownItem>}
+        <CDropdownItem>
+          {user !== null && <CDropdownItem>Role: {user.role}</CDropdownItem>}
         </CDropdownItem>
-        <CDropdownItem href="#">
+        <CDropdownItem>
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
