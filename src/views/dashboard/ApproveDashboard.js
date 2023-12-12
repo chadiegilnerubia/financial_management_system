@@ -24,6 +24,7 @@ import EditBudgetModal from './EditBudgetModal'
 import DeleteBudgetModal from './DeleteButtonModal'
 import { Pagination } from 'react-bootstrap'
 import useAlert from './useAlert'
+import CustomPagination from './CustomePagination'
 const PAGE_SIZE = 6
 
 const ApproveDashboard = () => {
@@ -446,7 +447,7 @@ const ApproveDashboard = () => {
         </CTableBody>
       </CTable>
       <div className="d-flex justify-content-center mt-3">
-        <Pagination>
+        {/* <Pagination>
           {Array.from({ length: Math.ceil(empUsers.length / PAGE_SIZE) }).map((_, index) => (
             <Pagination.Item
               key={index + 1}
@@ -456,7 +457,12 @@ const ApproveDashboard = () => {
               {index + 1}
             </Pagination.Item>
           ))}
-        </Pagination>
+        </Pagination> */}
+        <CustomPagination
+          totalPages={Math.ceil(empUsers.length / PAGE_SIZE)}
+          activePage={activePage}
+          handlePageChange={handlePageChange}
+        />
       </div>
     </>
   )
