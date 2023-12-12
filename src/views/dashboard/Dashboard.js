@@ -1,3 +1,4 @@
+import generatePDF, { Resolution, Margin, Options } from 'react-to-pdf'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Pagination } from 'react-bootstrap'
@@ -47,6 +48,48 @@ const Dashboard = () => {
     budget_name: '', // Added the budget_name field
     description: '', // Added the description field
   })
+
+  // generate PDF options
+  const options = {
+    filename: 'Income-statement-report.pdf',
+    method: 'save',
+    // default is Resolution.MEDIUM = 3, which should be enough, higher values
+    // increases the image quality but also the size of the PDF, so be careful
+    // using values higher than 10 when having multiple pages generated, it
+    // might cause the page to crash or hang.
+    resolution: Resolution.EXTREME,
+    page: {
+      // margin is in MM, default is Margin.NONE = 0
+      margin: Margin.SMALL,
+      // default is 'A4'
+      format: 'letter',
+      // default is 'portrait'
+      orientation: 'landscape',
+    },
+    canvas: {
+      // default is 'image/jpeg' for better size performance
+      mimeType: 'image/jpeg',
+      qualityRatio: 1,
+    },
+    // Customize any value passed to the jsPDF instance and html2canvas
+    // function. You probably will not need this and things can break,
+    // so use with caution.
+    overrides: {
+      // see https://artskydj.github.io/jsPDF/docs/jsPDF.html for more options
+      pdf: {
+        compress: true,
+      },
+      // see https://html2canvas.hertzen.com/configuration for more options
+      canvas: {
+        useCORS: true,
+      },
+    },
+  }
+  // generate PDF options
+
+  console.log(options)
+  const getTargetEl = () => document.getElementById('download-to-pdf')
+  const downloadPdf = () => generatePDF(getTargetEl, options)
   const [posts, setPosts] = useState([])
   useEffect(() => {
     const fetchData = async () => {
@@ -357,7 +400,12 @@ const Dashboard = () => {
       <div>
         <hr />
       </div>
-      <IncomeStatementDashboard />
+      <CButton className="mb-3 text-white" color="success" onClick={downloadPdf}>
+        Download Reports
+      </CButton>
+      <div id="download-to-pdf">
+        <IncomeStatementDashboard />
+      </div>
     </>
   )
 }
