@@ -51,6 +51,9 @@ const IncomeStatementDashboard = () => {
   const [totalIncome, setTotalIncome] = useState(0)
   const [totalNetIncome, setTotalNetIncome] = useState(0)
   const [totalIncomeTax, setTotalIncomeTax] = useState(0)
+  const [budgetProposalErr, setBudgetProposalErr] = useState('')
+  const [IncomeStatementErr, setIncomeStatementErr] = useState('')
+  const [error, setError] = useState(false)
   const [editModalVisible, setEditModalVisible] = useState(
     new Array(incomeStatementDate?.length || 0).fill(false),
   )
@@ -177,6 +180,25 @@ const IncomeStatementDashboard = () => {
   }
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Check if all required fields are filled
+    if (
+      !formData.budget_proposal_amount ||
+      !formData.budget_proposal_name ||
+      !formData.budget_proposal_description
+    ) {
+      setBudgetProposalErr('Please fill in all required fields')
+      setError(true)
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setError(false)
+        setBudgetProposalErr('')
+      }, 3000)
+      return
+    }
+
+    // Trim the string values if they exist, otherwise use an empty string
+    const trimmedName = formData.budget_proposal_name.trim()
+    const trimmedDescription = formData.budget_proposal_description.trim()
 
     try {
       const response = await fetch(
@@ -186,7 +208,11 @@ const IncomeStatementDashboard = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            budget_proposal_name: trimmedName,
+            budget_proposal_description: trimmedDescription,
+          }),
         },
       )
       if (response.ok) {
@@ -339,6 +365,22 @@ const IncomeStatementDashboard = () => {
   const handleIncomeStatementSubmit = async (e) => {
     e.preventDefault()
 
+    // Check if any of the fields are empty
+    const hasEmptyField = Object.values(incomeStatementFormData).some(
+      (value) => value === 0 || value === '' || value === null,
+    )
+    if (hasEmptyField) {
+      setIncomeStatementErr('Please fill in all fields')
+      setError(true)
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setIncomeStatementErr('')
+        setError(false)
+      }, 3000)
+
+      return
+    }
+
     try {
       const response = await fetch('http://localhost:3005/income-statements/', {
         method: 'POST',
@@ -367,8 +409,10 @@ const IncomeStatementDashboard = () => {
           position: '', // Add the submitter's position here
           // Add other fields as needed
         })
+
         const response = await axios.get('http://localhost:3005/income-statements')
         setIncomeStatementDate(response.data)
+
         // Close the modal
         setSubmitIncomeStatement(false)
         showAlert('Income statement submitted successfully!')
@@ -379,6 +423,7 @@ const IncomeStatementDashboard = () => {
       console.error('Error submitting income statement:', error)
     }
   }
+
   const startIndex = (activePage - 1) * PAGE_SIZE
   const filteredEmpUsers = incomeStatementDate
     .filter((comp) => comp.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -424,6 +469,11 @@ const IncomeStatementDashboard = () => {
           </CModalHeader>
           <CModalBody>
             <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
+              {error && (
+                <p className="text-white" style={{ backgroundColor: 'red', padding: '10px' }}>
+                  {IncomeStatementErr}
+                </p>
+              )}
               <form onSubmit={handleIncomeStatementSubmit}>
                 <div className="mb-3">
                   <label className="form-label">Company name</label>
@@ -544,7 +594,11 @@ const IncomeStatementDashboard = () => {
           <CModalBody>
             <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
               <form onSubmit={handleSubmit}>
-                {/* <h3 className="text-center m-2">Propose a budget</h3> */}
+                {error && (
+                  <p className="text-white" style={{ backgroundColor: 'red', padding: '10px' }}>
+                    {budgetProposalErr}
+                  </p>
+                )}
                 <div className="mb-3">
                   <label className="form-label">Budget Name</label>
                   <input

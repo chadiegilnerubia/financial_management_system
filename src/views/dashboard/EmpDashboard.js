@@ -44,6 +44,9 @@ const EmpDashboard = () => {
   const [budgetProposal, setBudgetProposals] = useState([])
   const [pendingProposalsCount, setPendingProposalsCount] = useState([])
   const [approvedProposalsCount, setApprovedProposalsCount] = useState([])
+  const [budgetProposalErr, setBudgetProposalErr] = useState('')
+  const [IncomeStatementErr, setIncomeStatementErr] = useState('')
+  const [error, setError] = useState(false)
   const {
     isVisible: updateAlertVisible,
     showAlert: showUpdateAlert,
@@ -124,6 +127,25 @@ const EmpDashboard = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Check if all required fields are filled
+    if (
+      !formData.budget_proposal_amount ||
+      !formData.budget_proposal_name ||
+      !formData.budget_proposal_description
+    ) {
+      setBudgetProposalErr('Please fill in all required fields')
+      setError(true)
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setError(false)
+        setBudgetProposalErr('')
+      }, 3000)
+      return
+    }
+
+    // Trim the string values if they exist, otherwise use an empty string
+    const trimmedName = formData.budget_proposal_name.trim()
+    const trimmedDescription = formData.budget_proposal_description.trim()
 
     try {
       const response = await fetch(
@@ -133,7 +155,11 @@ const EmpDashboard = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            budget_proposal_name: trimmedName,
+            budget_proposal_description: trimmedDescription,
+          }),
         },
       )
       if (response.ok) {
@@ -283,6 +309,22 @@ const EmpDashboard = () => {
   const handleIncomeStatementSubmit = async (e) => {
     e.preventDefault()
 
+    // Check if any of the fields are empty
+    const hasEmptyField = Object.values(incomeStatementFormData).some(
+      (value) => value === 0 || value === '' || value === null,
+    )
+    if (hasEmptyField) {
+      setIncomeStatementErr('Please fill in all fields')
+      setError(true)
+      // Clear the error message after 3 seconds
+      setTimeout(() => {
+        setIncomeStatementErr('')
+        setError(false)
+      }, 3000)
+
+      return
+    }
+
     try {
       const response = await fetch('http://localhost:3005/income-statements/', {
         method: 'POST',
@@ -366,6 +408,11 @@ const EmpDashboard = () => {
           </CModalHeader>
           <CModalBody>
             <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
+              {error && (
+                <p className="text-white" style={{ backgroundColor: 'red', padding: '10px' }}>
+                  {IncomeStatementErr}
+                </p>
+              )}
               <form onSubmit={handleIncomeStatementSubmit}>
                 <div className="mb-3">
                   <label className="form-label">Company name</label>
@@ -485,6 +532,11 @@ const EmpDashboard = () => {
           </CModalHeader>
           <CModalBody>
             <div className="card container-sm" style={{ width: '100%', padding: '20px' }}>
+              {error && (
+                <p className="text-white" style={{ backgroundColor: 'red', padding: '10px' }}>
+                  {budgetProposalErr}
+                </p>
+              )}
               <form onSubmit={handleSubmit}>
                 {/* <h3 className="text-center m-2">Propose a budget</h3> */}
                 <div className="mb-3">
